@@ -26,10 +26,50 @@
   a{ color:inherit; }
   .board{ max-width:1050px; margin:0 auto; display:flex; flex-direction:column; gap:32px; }
 
+  /* ---------- cross-site nav (present on every mieducacion.es property) ---------- */
+  .site-nav{
+    display:flex; justify-content:center; gap:6px; flex-wrap:wrap;
+    background:#00000020; border:1.5px solid var(--line-soft); border-radius:999px;
+    padding:6px; width:fit-content; margin:0 auto;
+  }
+  .site-nav a{
+    text-decoration:none; font-size:.8rem; color:var(--chalk-dim); font-weight:600;
+    padding:7px 14px; border-radius:999px; transition:background .15s,color .15s;
+  }
+  .site-nav a:hover{ color:var(--chalk); background:#ffffff0f; }
+  .site-nav a.current{ background:var(--chalk); color:var(--slate-1); }
+
   .crumb{ display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
   .crumb a{ text-decoration:none; font-size:.85rem; color:var(--chalk-dim); border:1.5px dashed var(--line-soft); border-radius:999px; padding:6px 14px; transition:color .15s,border-color .15s; }
   .crumb a:hover{ color:var(--chalk); border-color:var(--line); }
   .crumb .progress{ font-size:.72rem; color:var(--chalk-faint); text-transform:uppercase; letter-spacing:.08em; }
+
+  /* ---------- topics dropdown (grows with the site, always one click away) ---------- */
+  .topics-menu{ position:relative; }
+  .topics-menu summary{
+    list-style:none; cursor:pointer; display:flex; align-items:center; gap:8px;
+    text-decoration:none; font-size:.85rem; color:var(--chalk-dim); font-weight:600;
+    border:1.5px solid var(--line-soft); border-radius:999px; padding:7px 16px;
+    transition:color .15s,border-color .15s;
+  }
+  .topics-menu summary::-webkit-details-marker{ display:none; }
+  .topics-menu summary:hover{ color:var(--chalk); border-color:var(--line); }
+  .topics-menu[open] summary{ color:var(--chalk); border-color:var(--line); }
+  .topics-panel{
+    position:absolute; z-index:20; top:calc(100% + 8px); left:0; min-width:280px;
+    background:var(--slate-2); border:1.5px solid var(--line-soft); border-radius:16px;
+    padding:14px; box-shadow:0 14px 30px -10px #000000a0;
+    display:flex; flex-direction:column; gap:12px; max-height:70vh; overflow-y:auto;
+  }
+  .topics-panel .tgroup-label{ margin:0; font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--chalk-faint); font-weight:600; }
+  .topics-panel ul{ list-style:none; margin:4px 0 0; padding:0; display:flex; flex-direction:column; gap:2px; }
+  .topics-panel li a{
+    display:block; text-decoration:none; font-size:.86rem; color:var(--chalk-dim);
+    padding:6px 10px; border-radius:8px; transition:background .15s,color .15s;
+  }
+  .topics-panel li a:hover{ background:#ffffff10; color:var(--chalk); }
+  .topics-panel li a.current{ background:var(--yellow); color:var(--slate-1); font-weight:700; }
+  @media (max-width:520px){ .topics-panel{ position:fixed; left:16px; right:16px; top:auto; min-width:0; } }
 
   .board-head{ text-align:center; display:flex; flex-direction:column; align-items:center; gap:6px; }
   .eyebrow{ margin:0; text-transform:uppercase; letter-spacing:.16em; font-size:.68rem; font-weight:600; color:var(--chalk-faint); }
@@ -113,8 +153,39 @@
 <body>
 <div class="board">
 
+  <nav class="site-nav">
+    <a href="https://mieducacion.es">🏠 Inicio</a>
+    <a href="https://libros.mieducacion.es">📖 Libros</a>
+    <a href="https://cuadernos.mieducacion.es">📓 Cuadernos</a>
+    <a href="https://verbos.mieducacion.es" class="current">🔤 Verbos</a>
+  </nav>
+
   <nav class="crumb">
-    <a href="index.html">← Todos los tiempos</a>
+    <details class="topics-menu">
+      <summary>☰ Todos los temas</summary>
+      <div class="topics-panel">
+        <div>
+          <p class="tgroup-label">Tiempos Simples</p>
+          <ul>
+          <li><a href="presente-simple.html" class="current">Presente Simple</a></li>
+          <li><a href="presente-simple-negativo.html">Presente Simple — Negativo</a></li>
+          <li><a href="presente-simple-preguntas.html">Presente Simple — Preguntas</a></li>
+          <li><a href="pasado-simple.html">Pasado Simple</a></li>
+          <li><a href="pasado-simple-negativo.html">Pasado Simple — Negativo</a></li>
+          <li><a href="pasado-simple-preguntas.html">Pasado Simple — Preguntas</a></li>
+          <li><a href="futuro-simple.html">Futuro Simple</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="tgroup-label">Tiempos Continuos</p>
+          <ul>
+          <li><a href="presente-continuo.html">Presente Continuo</a></li>
+          <li><a href="pasado-continuo.html">Pasado Continuo</a></li>
+          <li><a href="futuro-going-to.html">Futuro con "Going To"</a></li>
+          </ul>
+        </div>
+      </div>
+    </details>
     <span class="progress">Tema 1 de 10 · Tiempos Simples</span>
   </nav>
 
