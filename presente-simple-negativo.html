@@ -77,6 +77,8 @@
   .example-card .grp-tag.they{ background:#5fd0c726; color:#5fd0c7; }
   .example-card p{ margin:0; font-size:.92rem; color:var(--chalk-dim); line-height:1.4; }
   .example-card p strong{ color:var(--chalk); font-weight:700; }
+  .example-card p.es{ font-size:.84rem; font-style:italic; color:var(--chalk-faint); }
+  .example-card p.note{ font-size:.78rem; color:var(--yellow); font-style:normal; line-height:1.4; }
 
   .pagenav{ display:flex; justify-content:space-between; align-items:center; gap:12px; border-top:1.5px dashed var(--line-soft); padding-top:20px; width:100%; }
   .pagenav a{ text-decoration:none; font-size:.85rem; color:var(--chalk-dim); border:1.5px solid var(--line-soft); border-radius:999px; padding:9px 18px; transition:color .15s,border-color .15s,background .15s; }
@@ -256,18 +258,26 @@
       <div class="example-card">
         <div class="subj-row"><span class="subj">María</span><span class="grp-tag he">He · She · It</span></div>
         <p>María <strong>doesn't go</strong> to school on Sundays.</p>
+        <p class="es">→ María no va a la escuela los domingos.</p>
+        
       </div>
       <div class="example-card">
         <div class="subj-row"><span class="subj">Los estudiantes</span><span class="grp-tag they">You · We · They</span></div>
         <p>Los estudiantes <strong>don't have</strong> class today.</p>
+        <p class="es">→ Los estudiantes no tienen clase hoy.</p>
+        
       </div>
       <div class="example-card">
         <div class="subj-row"><span class="subj">Mi hermano</span><span class="grp-tag he">He · She · It</span></div>
         <p>Mi hermano <strong>doesn't make</strong> breakfast on weekdays.</p>
+        <p class="es">→ Mi hermano no prepara el desayuno entre semana.</p>
+        
       </div>
       <div class="example-card">
         <div class="subj-row"><span class="subj">Ana y Luis</span><span class="grp-tag they">You · We · They</span></div>
         <p>Ana y Luis <strong>don't do</strong> homework on Fridays.</p>
+        <p class="es">→ Ana y Luis no hacen tarea los viernes.</p>
+        
       </div>
     </div>
   </div>
