@@ -63,12 +63,19 @@
   }
   .topics-panel .tgroup-label{ margin:0; font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--chalk-faint); font-weight:600; }
   .topics-panel ul{ list-style:none; margin:4px 0 0; padding:0; display:flex; flex-direction:column; gap:2px; }
-  .topics-panel li a{
-    display:block; text-decoration:none; font-size:.86rem; color:var(--chalk-dim);
+  .topic-row{ display:flex; align-items:stretch; gap:4px; }
+  .topics-panel .topic-link{
+    flex:1; display:block; text-decoration:none; font-size:.86rem; color:var(--chalk-dim);
     padding:6px 10px; border-radius:8px; transition:background .15s,color .15s;
   }
-  .topics-panel li a:hover{ background:#ffffff10; color:var(--chalk); }
-  .topics-panel li a.current{ background:var(--yellow); color:var(--slate-1); font-weight:700; }
+  .topics-panel .topic-link:hover{ background:#ffffff10; color:var(--chalk); }
+  .topics-panel .topic-link.current{ background:var(--yellow); color:var(--slate-1); font-weight:700; }
+  .topics-panel .practice-link{
+    display:flex; align-items:center; justify-content:center; width:32px; flex-shrink:0;
+    text-decoration:none; border-radius:8px; transition:background .15s;
+  }
+  .topics-panel .practice-link:hover{ background:#ffffff10; }
+  .topics-panel .practice-link.current{ background:var(--yellow); }
   @media (max-width:520px){ .topics-panel{ position:fixed; left:16px; right:16px; top:auto; min-width:0; } }
 
   .board-head{ text-align:center; display:flex; flex-direction:column; align-items:center; gap:6px; }
@@ -127,6 +134,48 @@
 
   .copyright{ text-align:center; margin:0; font-size:.72rem; color:var(--chalk-faint); }
 
+  /* ---------- practice link (on tense pages) ---------- */
+  .practice-cta{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    background:var(--yellow); color:var(--slate-1); border-radius:18px; padding:16px 22px;
+    text-decoration:none;
+  }
+  .practice-cta strong{ font-family:"Kalam",cursive; font-size:1.15rem; }
+  .practice-cta span{ font-size:.85rem; opacity:.85; }
+  .practice-cta .go{ font-weight:700; font-size:.9rem; white-space:nowrap; }
+
+  /* ---------- practice page ---------- */
+  .practice-block{ display:flex; flex-direction:column; gap:16px; }
+  .practice-block h2{ margin:0; font-family:"Kalam",cursive; font-weight:700; font-size:1.3rem; color:var(--chalk); text-align:center; }
+  .practice-block .practice-sub{ margin:-8px 0 0; font-size:.88rem; color:var(--chalk-dim); text-align:center; }
+
+  .quiz{ display:flex; flex-direction:column; gap:14px; }
+  .quiz-item{
+    background:var(--slate-2); border:1.5px solid var(--line-soft); border-radius:16px;
+    padding:18px 20px; display:flex; flex-direction:column; gap:12px;
+  }
+  .q-sentence{ margin:0; font-size:1.05rem; line-height:1.5; }
+  .q-sentence .blank{ display:inline-block; min-width:56px; border-bottom:2px dashed var(--line); }
+  .q-prompt{ margin:0; font-size:.9rem; color:var(--chalk-dim); }
+  .quiz-item audio{ width:100%; height:36px; }
+  .q-options{ display:flex; flex-wrap:wrap; gap:10px; }
+  .q-options button{
+    font:inherit; font-size:.92rem; font-weight:600; cursor:pointer;
+    background:var(--slate-1); color:var(--chalk); border:1.5px solid var(--line-soft);
+    border-radius:10px; padding:9px 16px; transition:border-color .15s, background .15s;
+  }
+  .q-options button:hover:not(:disabled){ border-color:var(--line); }
+  .q-options button:disabled{ cursor:default; }
+  .q-options button.correct{ background:#2e7d3240; border-color:#4caf50; color:var(--chalk); }
+  .q-options button.wrong{ background:#c0392b40; border-color:#e57373; color:var(--chalk); }
+  .q-feedback{ margin:0; font-size:.85rem; min-height:1.2em; }
+  .q-feedback.ok{ color:#8ee0b0; } .q-feedback.no{ color:#ef8f66; }
+
+  .quiz-score{
+    align-self:center; font-family:"Kalam",cursive; font-weight:700; font-size:1.1rem;
+    color:var(--slate-1); background:var(--chalk); border-radius:999px; padding:8px 20px;
+  }
+
   /* ---------- hub / index page ---------- */
   .hub-intro{ text-align:center; font-size:1rem; color:var(--chalk-dim); max-width:60ch; margin:0 auto; text-wrap:balance; }
   .hub-group{ display:flex; flex-direction:column; gap:14px; }
@@ -167,21 +216,51 @@
         <div>
           <p class="tgroup-label">Tiempos Simples</p>
           <ul>
-          <li><a href="presente-simple.html">Presente Simple</a></li>
-          <li><a href="presente-simple-negativo.html">Presente Simple — Negativo</a></li>
-          <li><a href="presente-simple-preguntas.html">Presente Simple — Preguntas</a></li>
-          <li><a href="pasado-simple.html">Pasado Simple</a></li>
-          <li><a href="pasado-simple-negativo.html">Pasado Simple — Negativo</a></li>
-          <li><a href="pasado-simple-preguntas.html" class="current">Pasado Simple — Preguntas</a></li>
-          <li><a href="futuro-simple.html">Futuro Simple</a></li>
+          <li class="topic-row">
+            <a href="presente-simple.html" class="topic-link">Presente Simple</a>
+            <a href="presente-simple-practica.html" class="practice-link" title="Practicar Presente Simple">🎯</a>
+          </li>
+          <li class="topic-row">
+            <a href="presente-simple-negativo.html" class="topic-link">Presente Simple — Negativo</a>
+            <a href="presente-simple-negativo-practica.html" class="practice-link" title="Practicar Presente Simple — Negativo">🎯</a>
+          </li>
+          <li class="topic-row">
+            <a href="presente-simple-preguntas.html" class="topic-link">Presente Simple — Preguntas</a>
+            <a href="presente-simple-preguntas-practica.html" class="practice-link" title="Practicar Presente Simple — Preguntas">🎯</a>
+          </li>
+          <li class="topic-row">
+            <a href="pasado-simple.html" class="topic-link">Pasado Simple</a>
+            <a href="pasado-simple-practica.html" class="practice-link" title="Practicar Pasado Simple">🎯</a>
+          </li>
+          <li class="topic-row">
+            <a href="pasado-simple-negativo.html" class="topic-link">Pasado Simple — Negativo</a>
+            <a href="pasado-simple-negativo-practica.html" class="practice-link" title="Practicar Pasado Simple — Negativo">🎯</a>
+          </li>
+          <li class="topic-row">
+            <a href="pasado-simple-preguntas.html" class="topic-link current">Pasado Simple — Preguntas</a>
+            <a href="pasado-simple-preguntas-practica.html" class="practice-link" title="Practicar Pasado Simple — Preguntas">🎯</a>
+          </li>
+          <li class="topic-row">
+            <a href="futuro-simple.html" class="topic-link">Futuro Simple</a>
+            <a href="futuro-simple-practica.html" class="practice-link" title="Practicar Futuro Simple">🎯</a>
+          </li>
           </ul>
         </div>
         <div>
           <p class="tgroup-label">Tiempos Continuos</p>
           <ul>
-          <li><a href="presente-continuo.html">Presente Continuo</a></li>
-          <li><a href="pasado-continuo.html">Pasado Continuo</a></li>
-          <li><a href="futuro-going-to.html">Futuro con "Going To"</a></li>
+          <li class="topic-row">
+            <a href="presente-continuo.html" class="topic-link">Presente Continuo</a>
+            <a href="presente-continuo-practica.html" class="practice-link" title="Practicar Presente Continuo">🎯</a>
+          </li>
+          <li class="topic-row">
+            <a href="pasado-continuo.html" class="topic-link">Pasado Continuo</a>
+            <a href="pasado-continuo-practica.html" class="practice-link" title="Practicar Pasado Continuo">🎯</a>
+          </li>
+          <li class="topic-row">
+            <a href="futuro-going-to.html" class="topic-link">Futuro con "Going To"</a>
+            <a href="futuro-going-to-practica.html" class="practice-link" title="Practicar Futuro con "Going To"">🎯</a>
+          </li>
           </ul>
         </div>
       </div>
@@ -342,6 +421,12 @@
       </div>
     </div>
   </div>
+
+  <a class="practice-cta" href="pasado-simple-preguntas-practica.html">
+    <strong>🎯 Practicar Pasado Simple — Preguntas</strong>
+    <span>5 preguntas de gramática + 5 de listening</span>
+    <span class="go">Empezar →</span>
+  </a>
 
   <nav class="pagenav">
     <a href="pasado-simple-negativo.html">← Pasado Simple — Negativo</a>
