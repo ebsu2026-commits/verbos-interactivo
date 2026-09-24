@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conjugación de Verbos — Inicio</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Archivo:ital,wght@0,500;0,600;0,700;1,500&display=swap">
+<style>
+  :root{
+    --slate-1:#16241f; --slate-2:#1e332c;
+    --chalk:#f4f1e6; --chalk-dim:#a9bdb2; --chalk-faint:#6f8478;
+    --line:#8fae9c; --line-soft:#4a6459;
+    --yellow:#f0c94a; --coral:#ef8f66; --sky:#8ecbe0;
+    --mint:#8ee0b0; --lilac:#c9a4f0; --amber:#f0a94a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 18% 8%, #ffffff08 0, transparent 45%),
+      radial-gradient(circle at 82% 92%, #ffffff06 0, transparent 40%),
+      linear-gradient(160deg, var(--slate-2), var(--slate-1) 70%);
+    color:var(--chalk); font-family:"Archivo","Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased; padding:34px 24px 32px; min-height:100vh;
+  }
+  a{ color:inherit; }
+  .board{ max-width:1050px; margin:0 auto; display:flex; flex-direction:column; gap:32px; }
+
+  .crumb{ display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+  .crumb a{ text-decoration:none; font-size:.85rem; color:var(--chalk-dim); border:1.5px dashed var(--line-soft); border-radius:999px; padding:6px 14px; transition:color .15s,border-color .15s; }
+  .crumb a:hover{ color:var(--chalk); border-color:var(--line); }
+  .crumb .progress{ font-size:.72rem; color:var(--chalk-faint); text-transform:uppercase; letter-spacing:.08em; }
+
+  .board-head{ text-align:center; display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .eyebrow{ margin:0; text-transform:uppercase; letter-spacing:.16em; font-size:.68rem; font-weight:600; color:var(--chalk-faint); }
+  h1{ margin:2px 0 0; font-family:"Kalam",cursive; font-weight:700; font-size:clamp(2rem,5vw,2.8rem); color:var(--chalk); text-wrap:balance; line-height:1.1; }
+  .squiggle{ width:200px; height:14px; margin-top:-2px; }
+  .squiggle path{ fill:none; stroke:var(--yellow); stroke-width:4; stroke-linecap:round; }
+  .subtitle, .tense-rule{ margin:4px 0 0; font-size:1rem; color:var(--chalk-dim); max-width:58ch; text-wrap:balance; text-align:center; }
+  .subtitle strong, .tense-rule strong{ color:var(--chalk); font-weight:600; }
+
+  .diagram-desktop{ display:none; }
+  .canvas{ position:relative; width:964px; height:438px; margin:0 auto; }
+  .canvas svg.connectors{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+  .connectors line{ stroke:var(--line); stroke-width:2; }
+  .connectors circle{ fill:var(--slate-1); stroke:var(--line); stroke-width:2; }
+  .node{ position:absolute; overflow:hidden; background:var(--slate-2); border:1.5px solid var(--line-soft); box-shadow:0 8px 20px -12px #00000080; }
+  .hub{ left:0; top:0; width:200px; height:438px; border-radius:100px; display:flex; align-items:center; justify-content:center; }
+  .hub span{ font-family:"Kalam",cursive; font-weight:700; font-size:1.6rem; color:var(--chalk); }
+  .verb{ width:340px; height:130px; border-radius:65px; display:flex; flex-direction:column; }
+  .verb-head{ text-align:center; padding:8px 20px 6px; font-family:"Kalam",cursive; font-weight:700; font-size:1.2rem; color:var(--slate-1); }
+  .verb-rows{ flex:1; display:flex; flex-direction:column; justify-content:center; gap:4px; padding:2px 26px 10px; }
+  .verb-row{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
+  .verb-row .who{ font-size:.8rem; color:var(--chalk-dim); white-space:nowrap; }
+  .verb-row .form{ font-weight:700; font-size:1.05rem; color:var(--chalk); white-space:nowrap; }
+  .verb-row.solo{ justify-content:center; gap:8px; }
+  .verb-row.solo .who{ font-style:italic; }
+  .v-be .verb-head{ background:var(--sky); } .v-have .verb-head{ background:var(--yellow); }
+  .v-do .verb-head{ background:var(--coral); } .v-go .verb-head{ background:var(--mint); }
+  .v-make .verb-head{ background:var(--lilac); } .v-get .verb-head{ background:var(--amber); }
+
+  .diagram-mobile{ display:flex; flex-direction:column; gap:16px; width:100%; max-width:480px; margin:0 auto; }
+  .diagram-mobile .node{ position:static; width:100%; height:auto; border-radius:36px; }
+  .diagram-mobile .hub{ padding:18px 0; }
+  .diagram-mobile .verb-rows{ padding:6px 30px 16px; }
+
+  @media (min-width:1050px){ .diagram-desktop{ display:block; } .diagram-mobile{ display:none; } }
+
+  .examples{ width:100%; }
+  .examples h3{ margin:0 0 12px; font-family:"Kalam",cursive; font-weight:700; font-size:1.15rem; color:var(--chalk); text-align:center; }
+  .examples-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; }
+  .example-card{ background:#00000018; border:1.5px dashed var(--line-soft); border-radius:12px; padding:12px 16px; display:flex; flex-direction:column; gap:6px; }
+  .example-card .subj-row{ display:flex; align-items:center; gap:8px; }
+  .example-card .subj{ font-family:"Kalam",cursive; font-weight:700; font-size:1rem; color:var(--chalk); }
+  .example-card .grp-tag{ font-size:.62rem; text-transform:uppercase; letter-spacing:.04em; font-weight:600; padding:2px 8px; border-radius:999px; white-space:nowrap; }
+  .example-card .grp-tag.he{ background:#e8607a26; color:#e8607a; }
+  .example-card .grp-tag.they{ background:#5fd0c726; color:#5fd0c7; }
+  .example-card p{ margin:0; font-size:.92rem; color:var(--chalk-dim); line-height:1.4; }
+  .example-card p strong{ color:var(--chalk); font-weight:700; }
+
+  .pagenav{ display:flex; justify-content:space-between; align-items:center; gap:12px; border-top:1.5px dashed var(--line-soft); padding-top:20px; width:100%; }
+  .pagenav a{ text-decoration:none; font-size:.85rem; color:var(--chalk-dim); border:1.5px solid var(--line-soft); border-radius:999px; padding:9px 18px; transition:color .15s,border-color .15s,background .15s; }
+  .pagenav a:hover{ color:var(--slate-1); background:var(--chalk); border-color:var(--chalk); }
+  .pagenav .spacer{ flex:1; }
+
+  /* ---------- hub / index page ---------- */
+  .hub-intro{ text-align:center; font-size:1rem; color:var(--chalk-dim); max-width:60ch; margin:0 auto; text-wrap:balance; }
+  .hub-group{ display:flex; flex-direction:column; gap:14px; }
+  .hub-group h2{ margin:0; font-family:"Kalam",cursive; font-weight:700; font-size:1.3rem; color:var(--yellow); text-align:center; }
+  .card-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; }
+  .tense-card{
+    display:block; text-decoration:none; background:var(--slate-2); border:1.5px solid var(--line-soft);
+    border-radius:20px; padding:18px 20px; transition:transform .15s,border-color .15s; position:relative; overflow:hidden;
+  }
+  .tense-card:hover{ transform:translateY(-3px); border-color:var(--line); }
+  .tense-card .bar{ position:absolute; left:0; top:0; bottom:0; width:6px; }
+  .tense-card h3{ margin:0 0 6px; font-family:"Kalam",cursive; font-weight:700; font-size:1.25rem; color:var(--chalk); }
+  .tense-card p{ margin:0; font-size:.85rem; color:var(--chalk-dim); line-height:1.45; }
+  .tense-card .go{ display:inline-block; margin-top:10px; font-size:.75rem; color:var(--yellow); font-weight:600; }
+
+  @media print{
+    body{ background:var(--slate-1) !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; padding:14px; }
+    .diagram-mobile{ display:none !important; } .diagram-desktop{ display:block !important; }
+    .canvas{ transform:scale(.74); transform-origin:top left; margin-bottom:-114px; }
+    .pagenav, .crumb{ display:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="board">
+
+  <header class="board-head">
+    <p class="eyebrow">Estrategia de enseñanza · Gramática · Inglés</p>
+    <h1>Conjugación de Verbos</h1>
+    <svg class="squiggle" viewBox="0 0 220 14"><path d="M4 8 Q 30 -2, 56 8 T 108 8 T 160 8 T 216 8"/></svg>
+    <p class="hub-intro">Elige un tiempo verbal para ver su mapa de nodos: el Sujeto en el centro, conectado a los seis verbos más usados, cada uno con la forma correcta y ejemplos con otros sujetos (no solo pronombres).</p>
+  </header>
+
+  <div class="hub-group">
+    <h2>Tiempos Simples</h2>
+    <div class="card-grid">
+      <a class="tense-card" href="presente-simple.html">
+        <span class="bar" style="background:var(--sky)"></span>
+        <h3>Presente Simple</h3>
+        <p>Solo He · She · It cambia el verbo. To Be es la excepción con tres formas.</p>
+        <span class="go">Ver el mapa →</span>
+      </a>
+      <a class="tense-card" href="pasado-simple.html">
+        <span class="bar" style="background:var(--coral)"></span>
+        <h3>Pasado Simple</h3>
+        <p>El verbo no cambia con nadie. To Be es la excepción (was / were).</p>
+        <span class="go">Ver el mapa →</span>
+      </a>
+      <a class="tense-card" href="futuro-simple.html">
+        <span class="bar" style="background:var(--mint)"></span>
+        <h3>Futuro Simple</h3>
+        <p>Con "will", el verbo nunca cambia — ni siquiera To Be.</p>
+        <span class="go">Ver el mapa →</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="hub-group">
+    <h2>Tiempos Continuos</h2>
+    <div class="card-grid">
+      <a class="tense-card" href="presente-continuo.html">
+        <span class="bar" style="background:var(--lilac)"></span>
+        <h3>Presente Continuo</h3>
+        <p>Siempre am / is / are + -ing, sin importar el verbo.</p>
+        <span class="go">Ver el mapa →</span>
+      </a>
+      <a class="tense-card" href="pasado-continuo.html">
+        <span class="bar" style="background:var(--amber)"></span>
+        <h3>Pasado Continuo</h3>
+        <p>Was (I, He·She·It) o were (el resto) + -ing.</p>
+        <span class="go">Ver el mapa →</span>
+      </a>
+      <a class="tense-card" href="futuro-going-to.html">
+        <span class="bar" style="background:var(--yellow)"></span>
+        <h3>Futuro con "Going To"</h3>
+        <p>Am / is / are + going to + verbo. A diferencia de "will", sí cambia.</p>
+        <span class="go">Ver el mapa →</span>
+      </a>
+    </div>
+  </div>
+</div>
+</body>
+</html>
