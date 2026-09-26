@@ -39,6 +39,15 @@
   .site-nav a:hover{ color:var(--chalk); background:#ffffff0f; }
   .site-nav a.current{ background:var(--chalk); color:var(--slate-1); }
 
+  .lang-switch{ display:flex; justify-content:center; gap:6px; }
+  .lang-switch a{
+    text-decoration:none; font-size:.78rem; color:var(--chalk-dim); font-weight:600;
+    padding:5px 12px; border-radius:999px; border:1.5px solid var(--line-soft);
+    transition:color .15s,border-color .15s;
+  }
+  .lang-switch a:hover{ color:var(--chalk); border-color:var(--line); }
+  .lang-switch a.current{ background:var(--yellow); color:var(--slate-1); border-color:var(--yellow); }
+
   .crumb{ display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
   .crumb a{ text-decoration:none; font-size:.85rem; color:var(--chalk-dim); border:1.5px dashed var(--line-soft); border-radius:999px; padding:6px 14px; transition:color .15s,border-color .15s; }
   .crumb a:hover{ color:var(--chalk); border-color:var(--line); }
@@ -207,6 +216,10 @@
     <a href="https://libros.mieducacion.es">📖 Libros</a>
     <a href="https://cuadernos.mieducacion.es">📓 Cuadernos</a>
     <a href="https://verbos.mieducacion.es" class="current">🔤 Verbos</a>
+  </nav>
+  <nav class="lang-switch">
+    <a href="index.html" class="current">🇬🇧 English</a>
+    <a href="fr-index.html">🇫🇷 Français</a>
   </nav>
 
   <nav class="crumb">
