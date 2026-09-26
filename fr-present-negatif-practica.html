@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Présent — Négatif — Pratique — Conjugaison des Verbes</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Archivo:ital,wght@0,500;0,600;0,700;1,500&display=swap">
+<style>
+  :root{
+    --slate-1:#16241f; --slate-2:#1e332c;
+    --chalk:#f4f1e6; --chalk-dim:#a9bdb2; --chalk-faint:#6f8478;
+    --line:#8fae9c; --line-soft:#4a6459;
+    --yellow:#f0c94a; --coral:#ef8f66; --sky:#8ecbe0;
+    --mint:#8ee0b0; --lilac:#c9a4f0; --amber:#f0a94a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 18% 8%, #ffffff08 0, transparent 45%),
+      radial-gradient(circle at 82% 92%, #ffffff06 0, transparent 40%),
+      linear-gradient(160deg, var(--slate-2), var(--slate-1) 70%);
+    color:var(--chalk); font-family:"Archivo","Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased; padding:34px 24px 32px; min-height:100vh;
+  }
+  a{ color:inherit; }
+  .board{ max-width:1050px; margin:0 auto; display:flex; flex-direction:column; gap:32px; }
+
+  /* ---------- cross-site nav (present on every mieducacion.es property) ---------- */
+  .site-nav{
+    display:flex; justify-content:center; gap:6px; flex-wrap:wrap;
+    background:#00000020; border:1.5px solid var(--line-soft); border-radius:999px;
+    padding:6px; width:fit-content; margin:0 auto;
+  }
+  .site-nav a{
+    text-decoration:none; font-size:.8rem; color:var(--chalk-dim); font-weight:600;
+    padding:7px 14px; border-radius:999px; transition:background .15s,color .15s;
+  }
+  .site-nav a:hover{ color:var(--chalk); background:#ffffff0f; }
+  .site-nav a.current{ background:var(--chalk); color:var(--slate-1); }
+
+  .lang-switch{ display:flex; justify-content:center; gap:6px; }
+  .lang-switch a{
+    text-decoration:none; font-size:.78rem; color:var(--chalk-dim); font-weight:600;
+    padding:5px 12px; border-radius:999px; border:1.5px solid var(--line-soft);
+    transition:color .15s,border-color .15s;
+  }
+  .lang-switch a:hover{ color:var(--chalk); border-color:var(--line); }
+  .lang-switch a.current{ background:var(--yellow); color:var(--slate-1); border-color:var(--yellow); }
+
+  .crumb{ display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+  .crumb a{ text-decoration:none; font-size:.85rem; color:var(--chalk-dim); border:1.5px dashed var(--line-soft); border-radius:999px; padding:6px 14px; transition:color .15s,border-color .15s; }
+  .crumb a:hover{ color:var(--chalk); border-color:var(--line); }
+  .crumb .progress{ font-size:.72rem; color:var(--chalk-faint); text-transform:uppercase; letter-spacing:.08em; }
+
+  /* ---------- topics dropdown (grows with the site, always one click away) ---------- */
+  .topics-menu{ position:relative; }
+  .topics-menu summary{
+    list-style:none; cursor:pointer; display:flex; align-items:center; gap:8px;
+    text-decoration:none; font-size:.85rem; color:var(--chalk-dim); font-weight:600;
+    border:1.5px solid var(--line-soft); border-radius:999px; padding:7px 16px;
+    transition:color .15s,border-color .15s;
+  }
+  .topics-menu summary::-webkit-details-marker{ display:none; }
+  .topics-menu summary:hover{ color:var(--chalk); border-color:var(--line); }
+  .topics-menu[open] summary{ color:var(--chalk); border-color:var(--line); }
+  .topics-panel{
+    position:absolute; z-index:20; top:calc(100% + 8px); left:0; min-width:280px;
+    background:var(--slate-2); border:1.5px solid var(--line-soft); border-radius:16px;
+    padding:14px; box-shadow:0 14px 30px -10px #000000a0;
+    display:flex; flex-direction:column; gap:12px; max-height:70vh; overflow-y:auto;
+  }
+  .topics-panel .tgroup-label{ margin:0; font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--chalk-faint); font-weight:600; }
+  .topics-panel ul{ list-style:none; margin:4px 0 0; padding:0; display:flex; flex-direction:column; gap:2px; }
+  .topic-row{ display:flex; align-items:stretch; gap:4px; }
+  .topics-panel .topic-link{
+    flex:1; display:block; text-decoration:none; font-size:.86rem; color:var(--chalk-dim);
+    padding:6px 10px; border-radius:8px; transition:background .15s,color .15s;
+  }
+  .topics-panel .topic-link:hover{ background:#ffffff10; color:var(--chalk); }
+  .topics-panel .topic-link.current{ background:var(--yellow); color:var(--slate-1); font-weight:700; }
+  .topics-panel .practice-link{
+    display:flex; align-items:center; justify-content:center; width:32px; flex-shrink:0;
+    text-decoration:none; border-radius:8px; transition:background .15s;
+  }
+  .topics-panel .practice-link:hover{ background:#ffffff10; }
+  .topics-panel .practice-link.current{ background:var(--yellow); }
+  @media (max-width:520px){ .topics-panel{ position:fixed; left:16px; right:16px; top:auto; min-width:0; } }
+
+  .board-head{ text-align:center; display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .eyebrow{ margin:0; text-transform:uppercase; letter-spacing:.16em; font-size:.68rem; font-weight:600; color:var(--chalk-faint); }
+  h1{ margin:2px 0 0; font-family:"Kalam",cursive; font-weight:700; font-size:clamp(2rem,5vw,2.8rem); color:var(--chalk); text-wrap:balance; line-height:1.1; }
+  .squiggle{ width:200px; height:14px; margin-top:-2px; }
+  .squiggle path{ fill:none; stroke:var(--yellow); stroke-width:4; stroke-linecap:round; }
+  .subtitle, .tense-rule{ margin:4px 0 0; font-size:1rem; color:var(--chalk-dim); max-width:58ch; text-wrap:balance; text-align:center; }
+  .subtitle strong, .tense-rule strong{ color:var(--chalk); font-weight:600; }
+
+  .diagram-desktop{ display:none; }
+  .canvas{ position:relative; width:964px; height:438px; margin:0 auto; }
+  .canvas svg.connectors{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+  .connectors line{ stroke:var(--line); stroke-width:2; }
+  .connectors circle{ fill:var(--slate-1); stroke:var(--line); stroke-width:2; }
+  .node{ position:absolute; overflow:hidden; background:var(--slate-2); border:1.5px solid var(--line-soft); box-shadow:0 8px 20px -12px #00000080; }
+  .hub{ left:0; top:0; width:200px; height:438px; border-radius:100px; display:flex; align-items:center; justify-content:center; }
+  .hub span{ font-family:"Kalam",cursive; font-weight:700; font-size:1.6rem; color:var(--chalk); }
+  .verb{ width:340px; height:130px; border-radius:65px; display:flex; flex-direction:column; }
+  .verb-head{ text-align:center; padding:8px 20px 6px; font-family:"Kalam",cursive; font-weight:700; font-size:1.2rem; color:var(--slate-1); }
+  .verb-rows{ flex:1; display:flex; flex-direction:column; justify-content:center; gap:4px; padding:2px 26px 10px; }
+  .verb-row{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
+  .verb-row .who{ font-size:.8rem; color:var(--chalk-dim); white-space:nowrap; }
+  .verb-row .form{ font-weight:700; font-size:1.05rem; color:var(--chalk); white-space:nowrap; }
+  .verb-row.solo{ justify-content:center; gap:8px; }
+  .verb-row.solo .who{ font-style:italic; }
+  .v-be .verb-head{ background:var(--sky); } .v-have .verb-head{ background:var(--yellow); }
+  .v-do .verb-head{ background:var(--coral); } .v-go .verb-head{ background:var(--mint); }
+  .v-make .verb-head{ background:var(--lilac); } .v-get .verb-head{ background:var(--amber); }
+
+  .diagram-mobile{ display:flex; flex-direction:column; gap:16px; width:100%; max-width:480px; margin:0 auto; }
+  .diagram-mobile .node{ position:static; width:100%; height:auto; border-radius:36px; }
+  .diagram-mobile .hub{ padding:18px 0; }
+  .diagram-mobile .verb-rows{ padding:6px 30px 16px; }
+
+  @media (min-width:1050px){ .diagram-desktop{ display:block; } .diagram-mobile{ display:none; } }
+
+  .examples{ width:100%; }
+  .examples h3{ margin:0 0 12px; font-family:"Kalam",cursive; font-weight:700; font-size:1.15rem; color:var(--chalk); text-align:center; }
+  .examples-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; }
+  .example-card{ background:#00000018; border:1.5px dashed var(--line-soft); border-radius:12px; padding:12px 16px; display:flex; flex-direction:column; gap:6px; }
+  .example-card .subj-row{ display:flex; align-items:center; gap:8px; }
+  .example-card .subj{ font-family:"Kalam",cursive; font-weight:700; font-size:1rem; color:var(--chalk); }
+  .example-card .grp-tag{ font-size:.62rem; text-transform:uppercase; letter-spacing:.04em; font-weight:600; padding:2px 8px; border-radius:999px; white-space:nowrap; }
+  .example-card .grp-tag.he{ background:#e8607a26; color:#e8607a; }
+  .example-card .grp-tag.they{ background:#5fd0c726; color:#5fd0c7; }
+  .example-card p{ margin:0; font-size:.92rem; color:var(--chalk-dim); line-height:1.4; }
+  .example-card p strong{ color:var(--chalk); font-weight:700; }
+  .example-card p.es{ font-size:.84rem; font-style:italic; color:var(--chalk-faint); }
+  .example-card p.note{ font-size:.78rem; color:var(--yellow); font-style:normal; line-height:1.4; }
+
+  .pagenav{ display:flex; justify-content:space-between; align-items:center; gap:12px; border-top:1.5px dashed var(--line-soft); padding-top:20px; width:100%; }
+  .pagenav a{ text-decoration:none; font-size:.85rem; color:var(--chalk-dim); border:1.5px solid var(--line-soft); border-radius:999px; padding:9px 18px; transition:color .15s,border-color .15s,background .15s; }
+  .pagenav a:hover{ color:var(--slate-1); background:var(--chalk); border-color:var(--chalk); }
+  .pagenav .spacer{ flex:1; }
+
+  .copyright{ text-align:center; margin:0; font-size:.72rem; color:var(--chalk-faint); }
+
+  /* ---------- practice link (on tense pages) ---------- */
+  .practice-cta{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    background:var(--yellow); color:var(--slate-1); border-radius:18px; padding:16px 22px;
+    text-decoration:none;
+  }
+  .practice-cta strong{ font-family:"Kalam",cursive; font-size:1.15rem; }
+  .practice-cta span{ font-size:.85rem; opacity:.85; }
+  .practice-cta .go{ font-weight:700; font-size:.9rem; white-space:nowrap; }
+
+  /* ---------- practice page ---------- */
+  .practice-block{ display:flex; flex-direction:column; gap:16px; }
+  .practice-block h2{ margin:0; font-family:"Kalam",cursive; font-weight:700; font-size:1.3rem; color:var(--chalk); text-align:center; }
+  .practice-block .practice-sub{ margin:-8px 0 0; font-size:.88rem; color:var(--chalk-dim); text-align:center; }
+
+  .quiz{ display:flex; flex-direction:column; gap:14px; }
+  .quiz-item{
+    background:var(--slate-2); border:1.5px solid var(--line-soft); border-radius:16px;
+    padding:18px 20px; display:flex; flex-direction:column; gap:12px;
+  }
+  .q-sentence{ margin:0; font-size:1.05rem; line-height:1.5; }
+  .q-sentence .blank{ display:inline-block; min-width:56px; border-bottom:2px dashed var(--line); }
+  .q-prompt{ margin:0; font-size:.9rem; color:var(--chalk-dim); }
+  .quiz-item audio{ width:100%; height:36px; }
+  .q-options{ display:flex; flex-wrap:wrap; gap:10px; }
+  .q-options button{
+    font:inherit; font-size:.92rem; font-weight:600; cursor:pointer;
+    background:var(--slate-1); color:var(--chalk); border:1.5px solid var(--line-soft);
+    border-radius:10px; padding:9px 16px; transition:border-color .15s, background .15s;
+  }
+  .q-options button:hover:not(:disabled){ border-color:var(--line); }
+  .q-options button:disabled{ cursor:default; }
+  .q-options button.correct{ background:#2e7d3240; border-color:#4caf50; color:var(--chalk); }
+  .q-options button.wrong{ background:#c0392b40; border-color:#e57373; color:var(--chalk); }
+  .q-feedback{ margin:0; font-size:.85rem; min-height:1.2em; }
+  .q-feedback.ok{ color:#8ee0b0; } .q-feedback.no{ color:#ef8f66; }
+
+  .quiz-score{
+    align-self:center; font-family:"Kalam",cursive; font-weight:700; font-size:1.1rem;
+    color:var(--slate-1); background:var(--chalk); border-radius:999px; padding:8px 20px;
+  }
+
+  /* ---------- hub / index page ---------- */
+  .hub-intro{ text-align:center; font-size:1rem; color:var(--chalk-dim); max-width:60ch; margin:0 auto; text-wrap:balance; }
+  .hub-group{ display:flex; flex-direction:column; gap:14px; }
+  .hub-group h2{ margin:0; font-family:"Kalam",cursive; font-weight:700; font-size:1.3rem; color:var(--yellow); text-align:center; }
+  .card-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; }
+  .tense-card{
+    display:block; text-decoration:none; background:var(--slate-2); border:1.5px solid var(--line-soft);
+    border-radius:20px; padding:18px 20px; transition:transform .15s,border-color .15s; position:relative; overflow:hidden;
+  }
+  .tense-card:hover{ transform:translateY(-3px); border-color:var(--line); }
+  .tense-card .bar{ position:absolute; left:0; top:0; bottom:0; width:6px; }
+  .tense-card h3{ margin:0 0 6px; font-family:"Kalam",cursive; font-weight:700; font-size:1.25rem; color:var(--chalk); }
+  .tense-card p{ margin:0; font-size:.85rem; color:var(--chalk-dim); line-height:1.45; }
+  .tense-card .go{ display:inline-block; margin-top:10px; font-size:.75rem; color:var(--yellow); font-weight:600; }
+
+  @media print{
+    body{ background:var(--slate-1) !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; padding:14px; }
+    .diagram-mobile{ display:none !important; } .diagram-desktop{ display:block !important; }
+    .canvas{ transform:scale(.74); transform-origin:top left; margin-bottom:-114px; }
+    .pagenav, .crumb{ display:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="board">
+
+  <nav class="site-nav">
+    <a href="https://mieducacion.es">🏠 Inicio</a>
+    <a href="https://libros.mieducacion.es">📖 Libros</a>
+    <a href="https://cuadernos.mieducacion.es">📓 Cuadernos</a>
+    <a href="https://verbos.mieducacion.es" class="current">🔤 Verbos</a>
+  </nav>
+  <nav class="lang-switch">
+    <a href="index.html">🇬🇧 English</a>
+    <a href="fr-index.html" class="current">🇫🇷 Français</a>
+  </nav>
+
+  <nav class="crumb">
+    <details class="topics-menu">
+      <summary>☰ Tous les sujets</summary>
+      <div class="topics-panel">
+        <div>
+          <p class="tgroup-label">Temps Simples</p>
+          <ul>
+          <li class="topic-row">
+            <a href="fr-present.html" class="topic-link">Présent</a>
+            <a href="fr-present-practica.html" class="practice-link" title="Practicar Présent">🎯</a>
+          </li>
+          <li class="topic-row">
+            <a href="fr-present-negatif.html" class="topic-link">Présent — Négatif</a>
+            <a href="fr-present-negatif-practica.html" class="practice-link current" title="Practicar Présent — Négatif">🎯</a>
+          </li>
+          <li class="topic-row">
+            <a href="fr-present-questions.html" class="topic-link">Présent — Questions</a>
+            <a href="fr-present-questions-practica.html" class="practice-link" title="Practicar Présent — Questions">🎯</a>
+          </li>
+          <li class="topic-row">
+            <a href="fr-passe-compose.html" class="topic-link">Passé Composé</a>
+            <a href="fr-passe-compose-practica.html" class="practice-link" title="Practicar Passé Composé">🎯</a>
+          </li>
+          <li class="topic-row">
+            <a href="fr-passe-compose-negatif.html" class="topic-link">Passé Composé — Négatif</a>
+            <a href="fr-passe-compose-negatif-practica.html" class="practice-link" title="Practicar Passé Composé — Négatif">🎯</a>
+          </li>
+          <li class="topic-row">
+            <a href="fr-passe-compose-questions.html" class="topic-link">Passé Composé — Questions</a>
+            <a href="fr-passe-compose-questions-practica.html" class="practice-link" title="Practicar Passé Composé — Questions">🎯</a>
+          </li>
+          <li class="topic-row">
+            <a href="fr-futur-simple.html" class="topic-link">Futur Simple</a>
+            <a href="fr-futur-simple-practica.html" class="practice-link" title="Practicar Futur Simple">🎯</a>
+          </li>
+          </ul>
+        </div>
+      </div>
+    </details>
+    <span class="progress">Pratique · Présent — Négatif</span>
+  </nav>
+
+  <header class="board-head">
+    <p class="eyebrow">Pratique · Grammaire et Listening</p>
+    <h1>Présent — Négatif</h1>
+    <svg class="squiggle" viewBox="0 0 220 14"><path d="M4 8 Q 30 -2, 56 8 T 108 8 T 160 8 T 216 8"/></svg>
+    <p class="subtitle">Teste ce que tu as appris. Clique sur une option pour voir si elle est correcte.</p>
+  </header>
+
+  <section class="practice-block">
+    <h2>📝 Grammaire</h2>
+    <p class="practice-sub">Choisis la forme correcte du verbe.</p>
+    <div class="quiz" data-quiz="grammar">
+      <div class="quiz-item" data-quiz-item>
+        <p class="q-sentence">Marie <span class="blank">___</span> fatiguée.</p>
+        <div class="q-options">
+          <button>ne suis pas</button>
+          <button>n'es pas</button>
+          <button data-correct="true">n'est pas</button>
+        </div>
+        <p class="q-feedback"></p>
+      </div>
+      <div class="quiz-item" data-quiz-item>
+        <p class="q-sentence">Les étudiants <span class="blank">___</span> à l'école le dimanche.</p>
+        <div class="q-options">
+          <button>ne va pas</button>
+          <button>ne vais pas</button>
+          <button data-correct="true">ne vont pas</button>
+        </div>
+        <p class="q-feedback"></p>
+      </div>
+      <div class="quiz-item" data-quiz-item>
+        <p class="q-sentence">Mon frère <span class="blank">___</span> ses devoirs le samedi.</p>
+        <div class="q-options">
+          <button>ne fais pas</button>
+          <button>ne faisons pas</button>
+          <button data-correct="true">ne fait pas</button>
+        </div>
+        <p class="q-feedback"></p>
+      </div>
+      <div class="quiz-item" data-quiz-item>
+        <p class="q-sentence">Ana et Luc <span class="blank">___</span> la vérité.</p>
+        <div class="q-options">
+          <button>ne dites pas</button>
+          <button data-correct="true">ne disent pas</button>
+          <button>ne dit pas</button>
+        </div>
+        <p class="q-feedback"></p>
+      </div>
+      <div class="quiz-item" data-quiz-item>
+        <p class="q-sentence">Je <span class="blank">___</span> fatigué.</p>
+        <div class="q-options">
+          <button data-correct="true">ne suis pas</button>
+          <button>n'est pas</button>
+          <button>n'es pas</button>
+        </div>
+        <p class="q-feedback"></p>
+      </div>
+    </div>
+    <p class="quiz-score" data-quiz-score="grammar">0 / 5</p>
+  </section>
+
+  <section class="practice-block">
+    <h2>🎧 Listening</h2>
+    <p class="practice-sub">Écoute l'audio et choisis la bonne phrase.</p>
+    <div class="quiz" data-quiz="listening">
+      <div class="quiz-item" data-quiz-item>
+        <audio controls src="audio/81559bebc480919e.mp3"></audio>
+        <p class="q-prompt">Quelle phrase as-tu entendue ?</p>
+        <div class="q-options">
+          <button>Marie n'es pas fatiguée.</button>
+          <button>Marie ne suis pas fatiguée.</button>
+          <button data-correct="true">Marie n'est pas fatiguée.</button>
+        </div>
+        <p class="q-feedback"></p>
+      </div>
+      <div class="quiz-item" data-quiz-item>
+        <audio controls src="audio/dc61acba0208a847.mp3"></audio>
+        <p class="q-prompt">Quelle phrase as-tu entendue ?</p>
+        <div class="q-options">
+          <button>Les étudiants ne va pas à l'école le dimanche.</button>
+          <button>Les étudiants ne vais pas à l'école le dimanche.</button>
+          <button data-correct="true">Les étudiants ne vont pas à l'école le dimanche.</button>
+        </div>
+        <p class="q-feedback"></p>
+      </div>
+      <div class="quiz-item" data-quiz-item>
+        <audio controls src="audio/9ba5263a1275c6d2.mp3"></audio>
+        <p class="q-prompt">Quelle phrase as-tu entendue ?</p>
+        <div class="q-options">
+          <button>Mon frère ne faisons pas ses devoirs le samedi.</button>
+          <button>Mon frère ne fais pas ses devoirs le samedi.</button>
+          <button data-correct="true">Mon frère ne fait pas ses devoirs le samedi.</button>
+        </div>
+        <p class="q-feedback"></p>
+      </div>
+      <div class="quiz-item" data-quiz-item>
+        <audio controls src="audio/af41d343eeba67e1.mp3"></audio>
+        <p class="q-prompt">Quelle phrase as-tu entendue ?</p>
+        <div class="q-options">
+          <button>Ana et Luc ne dites pas la vérité.</button>
+          <button>Ana et Luc ne dit pas la vérité.</button>
+          <button data-correct="true">Ana et Luc ne disent pas la vérité.</button>
+        </div>
+        <p class="q-feedback"></p>
+      </div>
+      <div class="quiz-item" data-quiz-item>
+        <audio controls src="audio/79b2c463e03f16b5.mp3"></audio>
+        <p class="q-prompt">Quelle phrase as-tu entendue ?</p>
+        <div class="q-options">
+          <button data-correct="true">Je ne suis pas fatigué.</button>
+          <button>Je n'est pas fatigué.</button>
+          <button>Je n'es pas fatigué.</button>
+        </div>
+        <p class="q-feedback"></p>
+      </div>
+    </div>
+    <p class="quiz-score" data-quiz-score="listening">0 / 5</p>
+  </section>
+
+  <nav class="pagenav">
+    <a href="fr-present-negatif.html">← Voir la carte de Présent — Négatif</a>
+    <span class="spacer"></span>
+    <a href="fr-index.html">Tous les sujets →</a>
+  </nav>
+  <p class="copyright">© 2026 Sebastián González Rodríguez</p>
+</div>
+<script>
+(function(){
+  document.querySelectorAll('[data-quiz-item]').forEach(function(item){
+    var buttons = item.querySelectorAll('.q-options button');
+    var feedback = item.querySelector('.q-feedback');
+    var quiz = item.closest('.quiz');
+    var scoreEl = quiz ? document.querySelector('[data-quiz-score="' + quiz.dataset.quiz + '"]') : null;
+    buttons.forEach(function(btn){
+      btn.addEventListener('click', function(){
+        if (item.dataset.answered) return;
+        item.dataset.answered = '1';
+        var isCorrect = btn.dataset.correct === 'true';
+        buttons.forEach(function(b){ b.disabled = true; });
+        if (isCorrect) {
+          btn.classList.add('correct');
+          feedback.textContent = '✓ ¡Correcto!';
+          feedback.className = 'q-feedback ok';
+        } else {
+          btn.classList.add('wrong');
+          var correctBtn = item.querySelector('[data-correct="true"]');
+          if (correctBtn) correctBtn.classList.add('correct');
+          feedback.textContent = '✗ Incorrecto — la respuesta correcta está marcada.';
+          feedback.className = 'q-feedback no';
+        }
+        if (scoreEl && isCorrect) {
+          var parts = scoreEl.textContent.split(' / ');
+          scoreEl.textContent = (parseInt(parts[0], 10) + 1) + ' / ' + parts[1];
+        }
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>
