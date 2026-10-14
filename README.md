@@ -1,20 +1,29 @@
-# Conjugación de Verbos — Sitio Interactivo
+# Verbos y Gramática — Sitio Interactivo
 
-Recurso didáctico para la enseñanza de inglés en el Centro Educativo Salomé Ureña. Muestra, en forma de mapa de nodos, cómo cambia (o no cambia) la forma de un verbo según el sujeto, para los 6 tiempos verbales básicos.
+Recurso didáctico para la enseñanza de inglés y francés en el Centro Educativo Salomé Ureña. Muestra, en forma de mapa de nodos, cómo cambia (o no cambia) cada forma según el sujeto. Incluye práctica de gramática y de listening con audio.
 
 ## Contenido
 
-- **`index.html`** — página de inicio con tarjetas de navegación agrupadas en Tiempos Simples y Tiempos Continuos.
-- **Tiempos Simples:** Presente Simple, Pasado Simple, Futuro Simple (`will`).
+**Inglés** (`index.html`)
+- **Tiempos Simples:** Presente, Pasado y Futuro (`will`), cada uno con sus versiones Negativo y Preguntas (presente y pasado).
 - **Tiempos Continuos:** Presente Continuo, Pasado Continuo, Futuro con `going to`.
+- **Verbos Modales:** Modal Verbs (afirmativo, negativo, preguntas).
+- **Pronombres y Posesivos:** Possessive Adjectives, Object Pronouns (incluye el uso corto "Me too!").
 
-Cada página tiene:
-- Un mapa de nodos: el Sujeto en el centro, conectado a los seis verbos más usados (to be, to have, to do, to go, to make, to get), cada uno con su forma correcta por grupo de sujeto.
-- Una sección de "Ejemplos con otros sujetos" (María, Los estudiantes, Mi hermano, Ana y Luis) para mostrar que la regla aplica más allá de los pronombres personales.
-- Navegación anterior/siguiente entre tiempos, y un enlace de regreso al inicio.
+**Francés** (`fr-index.html`)
+- **Temps Simples:** Présent, Passé Composé y Futur Simple (con Négatif y Questions en presente y passé composé).
+- **Verbes Modaux:** pouvoir, vouloir, devoir, savoir (présent, négatif, questions).
+- **Pronoms et Possessifs:** Adjectifs Possessifs, Pronoms Toniques, Pronoms COD, Pronoms COI.
 
-Es un sitio 100% estático (HTML + CSS en línea, sin build ni dependencias) — cada página también funciona abierta directamente desde el explorador de archivos, sin necesidad de internet.
+Cada tema tiene un mapa de nodos, "Ejemplos con otros sujetos" y una página de **práctica** (5 preguntas de gramática + 5 de listening con audio).
+
+Es un sitio 100% estático (HTML + CSS en línea, sin dependencias): cada página funciona también abierta desde el explorador de archivos.
 
 ## Desarrollo
 
-Las páginas se generan con un script (`build_verbos_site.js`, fuera de este repositorio) a partir de una lista de tiempos verbales. Para agregar un tiempo nuevo o corregir contenido, se edita ese script y se regenera — no se edita el HTML de cada página directamente, para no perder la sincronía entre páginas.
+Las páginas se generan con los scripts de `tools/` — no se edita el HTML a mano, para no perder la sincronía entre páginas.
+
+- `tools/build_verbos_site.js` — inglés (tiempos verbales + motor visual compartido).
+- `tools/verbos_extra_en.js` / `tools/verbos_extra_fr.js` — temas de gramática nuevos (modales, posesivos, pronombres). Para agregar un tema, se añade un bloque aquí.
+- `tools/build_verbos_fr.js` — francés; **también regenera el inglés**. Es el comando principal: `node tools/build_verbos_fr.js`.
+- `tools/gen_practice_audio.py` y `tools/gen_practice_audio_fr.py` — generan los audios de la práctica (requieren `pip install edge-tts`). Se corren después de añadir o cambiar preguntas y luego se vuelve a ejecutar el build para incrustar los audios.
