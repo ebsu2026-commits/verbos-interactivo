@@ -490,6 +490,7 @@ TENSES_FR.forEach((t, idx) => {
 
   <nav class="crumb">
     ${topicsMenuFr(t.slug)}
+    <a class="games-link" href="juegos.html?lang=fr">🎲 Aprender jugando</a>
     <span class="progress">Sujet ${idx + 1} de ${TENSES_FR.length} · ${t.group}</span>
   </nav>
 
@@ -526,6 +527,7 @@ ${FOOT}`;
 
   <nav class="crumb">
     ${topicsMenuFr(`${t.slug}-practica`)}
+    <a class="games-link" href="juegos.html?lang=fr">🎲 Aprender jugando</a>
     <span class="progress">Pratique · ${t.title}</span>
   </nav>
 
@@ -590,6 +592,12 @@ const indexHtmlFr = `${HEAD("Verbes et Grammaire — Accueil")}
     <p class="hub-intro">Elige un tema para ver su mapa de nodos: el Sujet en el centro, conectado a las formas correctas, con ejemplos con otros sujetos. Tiempos verbales, verbes modaux, possessifs et pronoms.</p>
   </header>
 
+  <a class="practice-cta" href="juegos.html?lang=fr">
+    <strong>🎲 Aprender jugando</strong>
+    <span>Ahorcado, memoria, concurso, ruleta y más para jugar por equipos en el aula</span>
+    <span class="go">Jugar →</span>
+  </a>
+
   ${groupsHtmlFr}
 ${FOOT}`;
 
@@ -613,3 +621,5 @@ fs.writeFileSync(
 console.log("wrote practice_sentences_fr.json —", new Set(practiceSentencesFr).size, "unique sentences");
 
 console.log("\nDone (FR):", TENSES_FR.length, "tense pages + 1 index page in", OUT_DIR);
+
+module.exports = { TENSES_FR };

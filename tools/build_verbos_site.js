@@ -203,6 +203,9 @@ const CSS = `
   .tense-card p{ margin:0; font-size:.85rem; color:var(--chalk-dim); line-height:1.45; }
   .tense-card .go{ display:inline-block; margin-top:10px; font-size:.75rem; color:var(--yellow); font-weight:600; }
 
+  .games-link{ text-decoration:none; font-size:.85rem; font-weight:700; color:var(--slate-1); background:var(--yellow); border-radius:999px; padding:7px 16px; }
+  .games-link:hover{ filter:brightness(1.07); }
+
   @media print{
     body{ background:var(--slate-1) !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; padding:14px; }
     .diagram-mobile{ display:none !important; } .diagram-desktop{ display:block !important; }
@@ -844,6 +847,7 @@ TENSES.forEach((t, idx) => {
 
   <nav class="crumb">
     ${topicsMenu(t.slug)}
+    <a class="games-link" href="juegos.html">🎲 Aprender jugando</a>
     <span class="progress">Tema ${idx + 1} de ${TENSES.length} · ${t.group}</span>
   </nav>
 
@@ -881,6 +885,7 @@ ${FOOT}`;
 
   <nav class="crumb">
     ${topicsMenu(`${t.slug}-practica`)}
+    <a class="games-link" href="juegos.html">🎲 Aprender jugando</a>
     <span class="progress">Práctica · ${t.title}</span>
   </nav>
 
@@ -945,6 +950,12 @@ const indexHtml = `${HEAD("Verbos y Gramática — Inicio")}
     <p class="hub-intro">Elige un tema para ver su mapa de nodos: el Sujeto en el centro, conectado a las formas correctas, con ejemplos con otros sujetos (no solo pronombres). Tiempos verbales, verbos modales, posesivos y pronombres.</p>
   </header>
 
+  <a class="practice-cta" href="juegos.html">
+    <strong>🎲 Aprender jugando</strong>
+    <span>Ahorcado, memoria, concurso, ruleta y más para jugar por equipos en el aula</span>
+    <span class="go">Jugar →</span>
+  </a>
+
   ${groupsHtml}
 ${FOOT}`;
 
@@ -974,6 +985,7 @@ console.log("\nDone:", TENSES.length, "tense pages + 1 index page in", OUT_DIR);
 // stay visually identical without copy-pasting the CSS/JS engine)
 // ============================================================
 module.exports = {
+  TENSES,
   OUT_DIR,
   CSS,
   HEAD,
