@@ -222,6 +222,7 @@ const HEAD = (title) => `<!DOCTYPE html>
 <title>${title}</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Archivo:ital,wght@0,500;0,600;0,700;1,500&display=swap">
 <style>${CSS}</style>
+<script src="https://mieducacion.es/analytics.js" defer></script>
 </head>
 <body>
 <div class="board">

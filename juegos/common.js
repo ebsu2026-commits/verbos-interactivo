@@ -335,6 +335,7 @@
   GK.endModal = function (onAgain, title) {
     if (!GK.active) return;
     GK.timer.end();
+    if (window.mieTrack) window.mieTrack("game_end", { game: GK.gameId, lang: GK.lang, teams: GK.teams.length });
     var max = Math.max.apply(null, GK.teams.map(function (t) { return t.score; }));
     var sorted = GK.teams.slice().sort(function (a, b) { return b.score - a.score; });
     var winners = GK.teams.filter(function (t) { return t.score === max; });
@@ -372,6 +373,7 @@
     GK.group = cfg.group || "all";
     GK.nTeams = cfg.nTeams || 2;
     GK.gameMinutes = cfg.minutes || 0;
+    GK.gameId = game.id;
     var turnSaved = cfg.turn && cfg.turn[game.id];
     GK.turnSeconds = turnSaved != null ? turnSaved : (game.defaultTurn != null ? game.defaultTurn : 30);
 
@@ -485,6 +487,7 @@
       GK.render();
       $("#gk-area").innerHTML = "";
       clockStart();
+      if (window.mieTrack) window.mieTrack("game_start", { game: game.id, lang: GK.lang, content: GK.group, teams: GK.nTeams, turn_seconds: GK.turnSeconds, game_minutes: GK.gameMinutes });
       game.start();
     }
     $("#gk-start").addEventListener("click", begin);
