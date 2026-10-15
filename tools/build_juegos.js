@@ -10,6 +10,8 @@ const { OUT_DIR, HEAD, COPYRIGHT, siteNav, shuffle, TENSES } = site;
 const { TENSES_FR } = frSite;
 const dataEn = require("./juegos_data_en.js");
 const dataFr = require("./juegos_data_fr.js");
+const qEn = require("./juegos_q_en.js");
+const qFr = require("./juegos_q_fr.js");
 
 const readMap = (name) => {
   const p = path.join(__dirname, name);
@@ -18,59 +20,134 @@ const readMap = (name) => {
 const AUDIO = { en: readMap("practice_audio_map.json"), fr: readMap("practice_audio_map_fr.json") };
 
 // ------------------------------------------------------------------ data.js
-function buildLang(lang, tenses, extra) {
+const VERB_LABELS = {
+  en: { be: "to be", have: "to have", do: "to do", go: "to go", make: "to make", get: "to get" },
+  fr: { etre: "être", avoir: "avoir", faire: "faire", aller: "aller", prendre: "prendre", dire: "dire" },
+};
+
+// small deterministic helpers (build output must be reproducible)
+let seedCounter = 100;
+const sh = (arr) => shuffle(arr, (seedCounter += 7));
+const uniq = (arr) => [...new Set(arr)];
+
+// level 1 (recognition): "who + (verb) -> ___" built from the conjugation tables
+const polarity = (t) => (/negativ/.test(t.slug) ? "neg" : /pregunt|question/.test(t.slug) ? "q" : "aff");
+
+function drillsFor(t, lang, allForms) {
+  const out = [];
+  if (t.verbs) {
+    Object.entries(t.verbs).forEach(([key, rows]) => {
+      rows.forEach(([who, form]) => {
+        const sameTense = uniq(rows.map((r) => r[1])).filter((f) => f !== form);
+        const otherTenses = [...allForms[key][polarity(t)]].filter((f) => f !== form && !sameTense.includes(f));
+        const cand = [...sh(sameTense), ...sh(otherTenses)];
+        if (cand.length < 2) return;
+        out.push({ s: `${who}  +  (${VERB_LABELS[lang][key]})  →  ___`, o: [form, cand[0], cand[1]], a: 0, k: "form", d: 1 });
+      });
+    });
+  } else if (t.diagram && t.diagram.boxes.every((b) => b.rows.length === 6)) {
+    t.diagram.boxes.forEach((box) => {
+      const lemma = box.head.split(" · ")[0].toLowerCase();
+      box.rows.forEach(([who, form]) => {
+        const cand = sh(uniq(box.rows.map((r) => r[1])).filter((f) => f !== form));
+        if (cand.length < 2) return;
+        out.push({ s: `${who}  +  (${lemma})  →  ___`, o: [form, cand[0], cand[1]], a: 0, k: "form", d: 1 });
+      });
+    });
+  }
+  return out;
+}
+
+function extraQs(table, key) {
+  const out = [];
+  const e = (table || {})[key] || {};
+  [1, 2, 3].forEach((d) => (e[d] || []).forEach(([s, ok, w1, w2, kind]) => {
+    out.push({ s, o: [ok, w1, w2], a: 0, k: kind === "choose" ? "choose" : "fill", d });
+  }));
+  return out;
+}
+
+function buildLang(lang, tenses, extra, qTable) {
   const byGroup = new Map();
+  const allForms = {};
+  tenses.forEach((t) => {
+    if (!t.verbs) return;
+    Object.entries(t.verbs).forEach(([k, rows]) => {
+      allForms[k] = allForms[k] || { aff: new Set(), neg: new Set(), q: new Set() };
+      rows.forEach((r) => allForms[k][polarity(t)].add(r[1]));
+    });
+  });
+
   tenses.forEach((t) => {
     if (!byGroup.has(t.group)) byGroup.set(t.group, { name: t.group, topics: [] });
-    byGroup.get(t.group).topics.push({
-      title: t.title,
-      questions: (t.practice || []).map((it) => ({ s: it.sentence, o: it.options, a: it.correct, k: "fill" })),
-    });
+    const practice = (t.practice || []).map((it) => ({ s: it.sentence, o: it.options, a: it.correct, k: "fill", d: 2 }));
+    const questions = [...drillsFor(t, lang, allForms), ...practice, ...extraQs(qTable, t.slug)];
+    byGroup.get(t.group).topics.push({ title: t.title, questions });
   });
   const groups = [...byGroup.values()];
 
-  // vocabulary: 5 multiple-choice questions per set, distractors from the same set
-  const vocabTopics = extra.vocab.map((v, vi) => {
-    const order = shuffle(v.items.map((_, i) => i), 11 + vi).slice(0, 5);
-    const questions = order.map((idx, qi) => {
-      const [word, es] = v.items[idx];
-      const others = shuffle(v.items.filter((_, i) => i !== idx).map((x) => x[0]), 31 + vi * 7 + qi).slice(0, 2);
-      return { s: extra.labels.howToSay(es), o: [word, ...others], a: 0, k: "vocab" };
+  // vocabulary: level 1 = Spanish -> word, level 2 = word -> Spanish, level 3 = written in context
+  const vocabTopics = extra.vocab.map((v) => {
+    const questions = [];
+    v.items.forEach(([word, es], idx) => {
+      const others = v.items.filter((_, i) => i !== idx);
+      const wrongWords = sh(others.map((x) => x[0])).slice(0, 2);
+      questions.push({ s: extra.labels.howToSay(es), o: [word, ...wrongWords], a: 0, k: "vocab", d: 1 });
+      const wrongEs = sh(others.map((x) => x[1])).slice(0, 2);
+      questions.push({ s: `¿Qué significa «${word}»?`, o: [es, ...wrongEs], a: 0, k: "vocab", d: 2 });
     });
-    return { title: v.title, questions };
+    return { title: v.title, questions: [...questions, ...extraQs(qTable, "vocab:" + v.title)] };
   });
   groups.push({ name: extra.vocabGroup, topics: vocabTopics });
 
   const sentences = [];
+  const extraSentenceTexts = [];
   tenses.forEach((t) => {
-    (t.practice || []).forEach((it) => {
-      const full = it.sentence.replace("___", it.options[it.correct]);
+    const add = (full, fromExtra) => {
       const text = lang === "fr" ? full.replace(/' /g, "'") : full;
-      sentences.push({ g: t.group, t: text, a: AUDIO[lang][full] || null });
-    });
+      sentences.push({ g: t.group, tp: t.title, t: text, a: AUDIO[lang][full] || null });
+      if (fromExtra) extraSentenceTexts.push(full);
+    };
+    (t.practice || []).forEach((it) => add(it.sentence.replace("___", it.options[it.correct]), false));
+    ((extra.sentences || {})[t.slug] || []).forEach((full) => add(full, true));
   });
 
+  const seen = new Set();
+  for (let i = sentences.length - 1; i >= 0; i--) {
+    if (seen.has(sentences[i].t)) sentences.splice(i, 1); else seen.add(sentences[i].t);
+  }
+
   const pairSets = [
-    ...extra.pairSets,
-    ...extra.vocab.map((v) => ({ group: extra.vocabGroup, title: v.title, pairs: v.items.slice(0, 6) })),
-  ].map((p) => ({ g: p.group, title: p.title, pairs: p.pairs }));
+    ...extra.pairSets.map((p) => ({ g: p.group, title: p.title, pairs: p.pairs })),
+    ...extra.vocab.map((v) => ({ g: extra.vocabGroup, tp: v.title, title: v.title, pairs: v.items.slice(0, 6) })),
+  ];
 
   const words = [
     ...extra.words.map((w) => ({ g: w.group, w: w.w, c: w.c })),
     ...extra.vocab.flatMap((v) =>
-      v.items.map(([word, es]) => ({ g: extra.vocabGroup, w: word.toUpperCase(), c: `${es} · ${v.title}` }))
+      v.items.map(([word, es]) => ({ g: extra.vocabGroup, tp: v.title, w: word.toUpperCase(), c: `${es} · ${v.title}` }))
     ),
   ];
 
   const prompts = extra.prompts.map((p) => ({ g: p.group, p: p.p }));
-  return { groups, sentences, pairSets, words, prompts };
+  return { groups, sentences, pairSets, words, prompts, _extraSentenceTexts: extraSentenceTexts };
 }
 
-const GAME_DATA = { en: buildLang("en", TENSES, dataEn), fr: buildLang("fr", TENSES_FR, dataFr) };
+const GAME_DATA = { en: buildLang("en", TENSES, dataEn, qEn), fr: buildLang("fr", TENSES_FR, dataFr, qFr) };
+
+// sentences that still need audio (the audio generators read these files)
+fs.writeFileSync(path.join(__dirname, "game_sentences.json"), JSON.stringify(uniq(GAME_DATA.en._extraSentenceTexts), null, 2), "utf-8");
+fs.writeFileSync(path.join(__dirname, "game_sentences_fr.json"), JSON.stringify(uniq(GAME_DATA.fr._extraSentenceTexts), null, 2), "utf-8");
+delete GAME_DATA.en._extraSentenceTexts;
+delete GAME_DATA.fr._extraSentenceTexts;
 fs.mkdirSync(path.join(OUT_DIR, "juegos"), { recursive: true });
 fs.writeFileSync(path.join(OUT_DIR, "juegos", "data.js"), "window.GAME_DATA = " + JSON.stringify(GAME_DATA) + ";\n", "utf-8");
-const count = (l) => `${GAME_DATA[l].groups.reduce((s, g) => s + g.topics.reduce((a, t) => a + t.questions.length, 0), 0)} preguntas, ${GAME_DATA[l].sentences.length} oraciones, ${GAME_DATA[l].words.length} palabras`;
-console.log("wrote juegos/data.js — EN:", count("en"), "| FR:", count("fr"));
+const levels = (l) => {
+  const c = { 1: 0, 2: 0, 3: 0 };
+  GAME_DATA[l].groups.forEach((g) => g.topics.forEach((t) => t.questions.forEach((q) => c[q.d]++)));
+  return `${c[1] + c[2] + c[3]} preguntas (fáciles ${c[1]}, medias ${c[2]}, difíciles ${c[3]})`;
+};
+console.log("wrote juegos/data.js — EN:", levels("en"), `${GAME_DATA.en.sentences.length} oraciones`, "| FR:", levels("fr"), `${GAME_DATA.fr.sentences.length} oraciones`);
 
 // --------------------------------------------------------------------- CSS
 const GAMES_CSS = `
@@ -91,6 +168,28 @@ const GAMES_CSS = `
   .gk-primary{ font-family:"Kalam",cursive; font-size:1.25rem; font-weight:700; cursor:pointer;
     background:var(--yellow); color:var(--slate-1); border:none; border-radius:999px; padding:10px 32px; }
   .gk-primary:hover{ filter:brightness(1.08); }
+  .gk-wide{ flex-basis:100%; align-items:center; }
+  .gk-names{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+  .gk-names input{ font:inherit; font-weight:600; width:120px; color:var(--chalk); background:var(--slate-1);
+    border:2px solid var(--line-soft); border-radius:999px; padding:8px 14px; text-align:center; }
+  .gk-topics{ flex-basis:100%; background:#00000018; border:1.5px dashed var(--line-soft); border-radius:14px; padding:14px 18px; display:flex; flex-direction:column; gap:8px; }
+  .gk-topics-group{ margin:6px 0 0; font-size:.72rem; text-transform:uppercase; letter-spacing:.1em; color:var(--yellow); font-weight:600; }
+  .gk-topics-row{ display:flex; flex-wrap:wrap; gap:6px 18px; }
+  .gk-check{ font-size:.9rem; color:var(--chalk-dim); cursor:pointer; }
+  .gk-check input{ accent-color:var(--yellow); }
+  .gk-clock{ display:flex; flex-wrap:wrap; align-items:center; gap:10px 18px; background:var(--slate-2);
+    border:1.5px solid var(--line-soft); border-radius:16px; padding:10px 16px; margin-bottom:14px; }
+  .gk-turnclock{ display:flex; align-items:center; gap:12px; flex:1; min-width:220px; }
+  #gk-tnum{ font-family:"Kalam",cursive; font-weight:700; font-size:2.4rem; line-height:1; min-width:2.2ch; text-align:center; color:var(--chalk); }
+  .gk-tbar{ flex:1; height:14px; background:#00000040; border-radius:999px; overflow:hidden; }
+  .gk-tbar i{ display:block; height:100%; width:0; background:var(--mint); border-radius:999px; transition:width .12s linear, background .3s; }
+  .gk-clock.warn .gk-tbar i{ background:var(--yellow); }
+  .gk-clock.low .gk-tbar i{ background:var(--coral); }
+  .gk-clock.low #gk-tnum{ color:var(--coral); animation:gkpulse .6s infinite alternate; }
+  @keyframes gkpulse{ to{ transform:scale(1.18); } }
+  .gk-gameclock{ font-weight:700; color:var(--chalk-dim); font-size:1.05rem; white-space:nowrap; }
+  .gk-pause-ov{ position:fixed; inset:0; z-index:80; background:#000000ee; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; }
+  .gk-pause-title{ margin:0; font-family:"Kalam",cursive; font-weight:700; font-size:clamp(2rem,7vw,3.4rem); color:var(--yellow); }
   .gk-rules{ background:#00000018; border:1.5px dashed var(--line-soft); border-radius:14px; padding:12px 18px; font-size:.9rem; color:var(--chalk-dim); }
   .gk-rules summary{ cursor:pointer; font-weight:600; color:var(--chalk); }
   .gk-rules ul{ margin:8px 0 0; padding-left:20px; display:flex; flex-direction:column; gap:4px; }
@@ -227,6 +326,7 @@ const GAMES = [
       "Cada equipo, en su turno, elige una letra (con el mouse o el teclado).",
       "Letra correcta: +1 punto y el mismo equipo sigue. Letra incorrecta: se dibuja una parte del ahorcado y pasa el turno.",
       "El equipo que completa la palabra gana +3 puntos extra. Con 6 errores se pierde la palabra.",
+      "⏱ Si se acaba el tiempo del turno, pasa al siguiente equipo sin penalización.",
     ],
   },
   {
@@ -237,6 +337,7 @@ const GAMES = [
       "En su turno, el equipo voltea dos cartas.",
       "Si forman una pareja correcta: +1 punto y vuelve a jugar. Si no, las cartas se tapan y pasa el turno.",
       "Gana el equipo con más parejas al descubrir todas las cartas.",
+      "⏱ Si se acaba el tiempo del turno, las cartas se tapan y pasa al siguiente equipo.",
     ],
   },
   {
@@ -247,6 +348,8 @@ const GAMES = [
       "El equipo en turno elige una categoría y un valor del tablero.",
       "Si responde bien, gana esos puntos. Si falla, no suma y pasa el turno.",
       "Cada casillero se usa una sola vez. Gana el equipo con más puntos al terminar.",
+      "Los valores crecen con la dificultad: 100 y 200 son fáciles, 300 y 400 medias, 500 difícil.",
+      "⏱ El reloj corre mientras se responde. Si se acaba, cuenta como respuesta incorrecta.",
     ],
   },
   {
@@ -257,6 +360,7 @@ const GAMES = [
       "El equipo en turno gira la ruleta.",
       "❓ Pregunta: +1 si responde bien. 🗣 Habla: el docente decide si lo logró (+2). 🎁 Punto extra: +2. 💣 Trampa: −1.",
       "Después de cada giro pasa el turno al siguiente equipo.",
+      "⏱ El reloj corre en las preguntas (cuenta como fallo si se acaba) y en los retos orales (avisa y el docente decide).",
     ],
   },
   {
@@ -267,6 +371,7 @@ const GAMES = [
       "Aparece una oración con las palabras desordenadas. Toquen las palabras para armarla.",
       "Si el equipo en turno acierta: +2 puntos y se escucha la oración. Si falla, le toca al siguiente equipo con la misma oración.",
       "Si todos los equipos fallan, se muestra la respuesta.",
+      "⏱ Cada intento tiene su reloj: si se acaba, cuenta como un intento fallido y pasa al siguiente equipo.",
     ],
   },
 ];
@@ -310,6 +415,31 @@ function gamePage(g) {
         <button data-v="4">4</button>
       </div>
     </div>
+    <div class="gk-field gk-wide">
+      <span class="gk-label">Nombres de los equipos</span>
+      <div class="gk-names" id="gk-names"></div>
+    </div>
+    <div class="gk-field">
+      <span class="gk-label">⏱ Tiempo por turno</span>
+      <div class="gk-seg" id="gk-turn">
+        <button data-v="0">Sin límite</button>
+        <button data-v="15">15 s</button>
+        <button data-v="30">30 s</button>
+        <button data-v="60">60 s</button>
+        <button data-v="90">90 s</button>
+      </div>
+    </div>
+    <div class="gk-field">
+      <span class="gk-label">⏱ Duración de la partida</span>
+      <div class="gk-seg" id="gk-minutes">
+        <button data-v="0">Sin límite</button>
+        <button data-v="5">5 min</button>
+        <button data-v="10">10 min</button>
+        <button data-v="15">15 min</button>
+      </div>
+    </div>
+    <div id="gk-topics" class="gk-topics" hidden></div>
+    <p id="gk-note" class="gk-msg no" hidden></p>
     <button id="gk-start" class="gk-primary">▶ Empezar</button>
   </section>
 
@@ -324,6 +454,12 @@ function gamePage(g) {
     <div class="gk-toolbar">
       <button class="gk-ghost" id="gk-back">← Cambiar ajustes</button>
       <button class="gk-ghost" id="gk-full">⛶ Pantalla completa</button>
+    </div>
+    <div id="gk-clock" class="gk-clock" hidden>
+      <div class="gk-turnclock"><span id="gk-tnum">—</span><div class="gk-tbar"><i id="gk-tfill"></i></div></div>
+      <div class="gk-gameclock">⏱ Partida <span id="gk-gtime">00:00</span></div>
+      <button class="gk-ghost" id="gk-pause">⏸ Pausa</button>
+      <button class="gk-ghost" id="gk-mute" aria-label="Sonido">🔊</button>
     </div>
     <div id="gk-scoreboard"></div>
     <div id="gk-area" class="gk-area"></div>
@@ -379,6 +515,7 @@ const hubHtml = `${HEAD("Aprender jugando — Verbos y Gramática")}
       <li><strong>Equipos de 4 o 5 estudiantes</strong> con un nombre y un portavoz que cambia en cada turno, para que todos participen.</li>
       <li><strong>El docente valida:</strong> los puntos se pueden corregir con los botones +1 / −1 de cada equipo.</li>
       <li><strong>Un tema a la vez:</strong> elijan en "Contenido" lo que se acaba de estudiar para reforzarlo.</li>
+      <li><strong>Temporizador:</strong> cada juego permite un reloj por turno (15 a 90 segundos) y una duración total de la partida (5 a 15 minutos) para ajustarse al tiempo de la clase. Hay botón de pausa y sonido opcional.</li>
       <li><strong>Pantalla completa:</strong> cada juego tiene un botón para verse mejor en el proyector o el televisor.</li>
       <li><strong>Sin internet:</strong> el sitio también funciona abierto desde la carpeta de la computadora.</li>
     </ul>

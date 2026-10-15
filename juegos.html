@@ -232,6 +232,28 @@
   .gk-primary{ font-family:"Kalam",cursive; font-size:1.25rem; font-weight:700; cursor:pointer;
     background:var(--yellow); color:var(--slate-1); border:none; border-radius:999px; padding:10px 32px; }
   .gk-primary:hover{ filter:brightness(1.08); }
+  .gk-wide{ flex-basis:100%; align-items:center; }
+  .gk-names{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+  .gk-names input{ font:inherit; font-weight:600; width:120px; color:var(--chalk); background:var(--slate-1);
+    border:2px solid var(--line-soft); border-radius:999px; padding:8px 14px; text-align:center; }
+  .gk-topics{ flex-basis:100%; background:#00000018; border:1.5px dashed var(--line-soft); border-radius:14px; padding:14px 18px; display:flex; flex-direction:column; gap:8px; }
+  .gk-topics-group{ margin:6px 0 0; font-size:.72rem; text-transform:uppercase; letter-spacing:.1em; color:var(--yellow); font-weight:600; }
+  .gk-topics-row{ display:flex; flex-wrap:wrap; gap:6px 18px; }
+  .gk-check{ font-size:.9rem; color:var(--chalk-dim); cursor:pointer; }
+  .gk-check input{ accent-color:var(--yellow); }
+  .gk-clock{ display:flex; flex-wrap:wrap; align-items:center; gap:10px 18px; background:var(--slate-2);
+    border:1.5px solid var(--line-soft); border-radius:16px; padding:10px 16px; margin-bottom:14px; }
+  .gk-turnclock{ display:flex; align-items:center; gap:12px; flex:1; min-width:220px; }
+  #gk-tnum{ font-family:"Kalam",cursive; font-weight:700; font-size:2.4rem; line-height:1; min-width:2.2ch; text-align:center; color:var(--chalk); }
+  .gk-tbar{ flex:1; height:14px; background:#00000040; border-radius:999px; overflow:hidden; }
+  .gk-tbar i{ display:block; height:100%; width:0; background:var(--mint); border-radius:999px; transition:width .12s linear, background .3s; }
+  .gk-clock.warn .gk-tbar i{ background:var(--yellow); }
+  .gk-clock.low .gk-tbar i{ background:var(--coral); }
+  .gk-clock.low #gk-tnum{ color:var(--coral); animation:gkpulse .6s infinite alternate; }
+  @keyframes gkpulse{ to{ transform:scale(1.18); } }
+  .gk-gameclock{ font-weight:700; color:var(--chalk-dim); font-size:1.05rem; white-space:nowrap; }
+  .gk-pause-ov{ position:fixed; inset:0; z-index:80; background:#000000ee; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; }
+  .gk-pause-title{ margin:0; font-family:"Kalam",cursive; font-weight:700; font-size:clamp(2rem,7vw,3.4rem); color:var(--yellow); }
   .gk-rules{ background:#00000018; border:1.5px dashed var(--line-soft); border-radius:14px; padding:12px 18px; font-size:.9rem; color:var(--chalk-dim); }
   .gk-rules summary{ cursor:pointer; font-weight:600; color:var(--chalk); }
   .gk-rules ul{ margin:8px 0 0; padding-left:20px; display:flex; flex-direction:column; gap:4px; }
@@ -420,6 +442,7 @@
       <li><strong>Equipos de 4 o 5 estudiantes</strong> con un nombre y un portavoz que cambia en cada turno, para que todos participen.</li>
       <li><strong>El docente valida:</strong> los puntos se pueden corregir con los botones +1 / −1 de cada equipo.</li>
       <li><strong>Un tema a la vez:</strong> elijan en "Contenido" lo que se acaba de estudiar para reforzarlo.</li>
+      <li><strong>Temporizador:</strong> cada juego permite un reloj por turno (15 a 90 segundos) y una duración total de la partida (5 a 15 minutos) para ajustarse al tiempo de la clase. Hay botón de pausa y sonido opcional.</li>
       <li><strong>Pantalla completa:</strong> cada juego tiene un botón para verse mejor en el proyector o el televisor.</li>
       <li><strong>Sin internet:</strong> el sitio también funciona abierto desde la carpeta de la computadora.</li>
     </ul>

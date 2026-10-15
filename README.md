@@ -17,9 +17,12 @@ Recurso didáctico para la enseñanza de inglés y francés en el Centro Educati
 
 Cada tema tiene un mapa de nodos, "Ejemplos con otros sujetos" y una página de **práctica** (5 preguntas de gramática + 5 de listening con audio).
 
-**Aprender jugando** (`juegos.html`) — juegos para proyectar y jugar por equipos (2 a 4), en inglés y en francés, con el contenido de los temas y vocabulario de Identificación Personal:
+**Aprender jugando** (`juegos.html`) — juegos para proyectar y jugar por equipos (2 a 4), en inglés y en francés:
 - Ahorcado, Memoria de parejas, Concurso de puntos (tablero 100–500), Ruleta de retos y Ordena la oración (con audio).
-- Se elige idioma, contenido (un grupo de temas o mezcla) y número de equipos. Cada juego tiene marcador con +1 / −1 para que el docente corrija y botón de pantalla completa.
+- **Temporizador:** tiempo por turno (sin límite, 15, 30, 60 o 90 s) y duración de la partida (sin límite, 5, 10 o 15 min). Barra que cambia de color, pausa, sonido opcional. Cuando se acaba el turno: el Ahorcado y la Memoria pasan al siguiente equipo; en el Concurso y la Ruleta cuenta como respuesta fallida; en Ordena la oración cuenta como intento fallido. Al terminar la partida se muestra el ganador.
+- **Contenido:** se elige un grupo de temas, una mezcla o temas concretos ("Elegir temas…"). Incluye vocabulario de Identificación Personal.
+- **Dificultad:** las preguntas tienen nivel 1 (reconocer la forma), 2 (en contexto) o 3 (difícil). En el Concurso, 100 y 200 son fáciles, 300 y 400 medias y 500 difícil. Las preguntas no se repiten dentro de una partida.
+- Nombres de equipo editables, marcador con +1 / −1 y pantalla completa. Los ajustes (idioma, contenido, equipos, nombres, tiempos y sonido) se guardan en el navegador.
 
 Es un sitio 100% estático (HTML + CSS en línea, sin dependencias): cada página funciona también abierta desde el explorador de archivos.
 
@@ -30,7 +33,8 @@ Las páginas se generan con los scripts de `tools/` — no se edita el HTML a ma
 - `tools/build_verbos_site.js` — inglés (tiempos verbales + motor visual compartido).
 - `tools/verbos_extra_en.js` / `tools/verbos_extra_fr.js` — temas de gramática nuevos (modales, posesivos, pronombres). Para agregar un tema, se añade un bloque aquí.
 - `tools/build_verbos_fr.js` — francés.
-- `tools/juegos_data_en.js` / `tools/juegos_data_fr.js` — vocabulario, parejas, palabras del ahorcado y retos de la ruleta. Las preguntas y oraciones de los juegos salen solas de las páginas de práctica, así que un tema nuevo alimenta los juegos sin trabajo extra.
-- `tools/build_juegos.js` — genera `juegos/data.js`, `juegos.html` y las páginas de cada juego.
-- `juegos/*.js` — lógica de cada juego (se editan a mano; `data.js` sí es generado).
-- `tools/gen_practice_audio.py` y `tools/gen_practice_audio_fr.py` — generan los audios de la práctica (requieren `pip install edge-tts`). Se corren después de añadir o cambiar preguntas y luego se vuelve a ejecutar el build para incrustar los audios.
+- `tools/build_juegos.js` — genera `juegos/data.js`, `juegos.html` y las páginas de cada juego. Arma automáticamente las preguntas de conjugación (nivel 1) a partir de las tablas de cada tema y reúne las de práctica (nivel 2).
+- `tools/juegos_q_en.js` / `tools/juegos_q_fr.js` — preguntas escritas a mano por tema y nivel (formato `[oración con ___, correcta, error1, error2]`; con quinto elemento `"choose"` son de "elegir la oración correcta").
+- `tools/juegos_data_en.js` / `tools/juegos_data_fr.js` — vocabulario, parejas, palabras del ahorcado, retos de la ruleta y oraciones extra para ordenar.
+- `juegos/*.js` — lógica de cada juego y motor común (`common.js`); se editan a mano. `juegos/data.js` sí es generado.
+- `tools/gen_practice_audio.py` y `tools/gen_practice_audio_fr.py` — generan los audios de la práctica y de las oraciones del juego (requieren `pip install -U edge-tts`). Orden al añadir oraciones: build → generar audio → build otra vez.

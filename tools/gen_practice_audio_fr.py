@@ -15,6 +15,12 @@ with open(os.path.join(SCRATCH, "practice_sentences_fr.json"), encoding="utf-8")
     sentences = json.load(f)
 
 
+extra_path = os.path.join(SCRATCH, "game_sentences_fr.json")
+if os.path.exists(extra_path):
+    with open(extra_path, encoding="utf-8") as f:
+        sentences = list(dict.fromkeys(sentences + json.load(f)))
+
+
 def audio_filename(text):
     h = hashlib.sha1((VOICE + text).encode("utf-8")).hexdigest()[:16]
     return f"{h}.mp3"

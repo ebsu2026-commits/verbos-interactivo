@@ -1,4 +1,4 @@
-/* Ahorcado — teams take turns choosing letters. */
+/* Ahorcado — teams take turns choosing letters; the turn timer passes the turn when it runs out. */
 (function () {
   "use strict";
   var GK = window.GameKit;
@@ -25,6 +25,17 @@
       queue = GK.shuffle(long.length ? long : all);
     }
     return queue.pop();
+  }
+
+  function turnStart() { GK.timer.begin(onTimeout); }
+
+  function onTimeout() {
+    if (over) return;
+    var msg = GK.$("#hm-msg");
+    msg.className = "gk-msg no";
+    msg.textContent = "⏰ Se acabó el tiempo: pasa el turno.";
+    GK.next();
+    turnStart();
   }
 
   function draw() {
@@ -88,6 +99,7 @@
 
   function finish(won, text) {
     over = true;
+    GK.timer.end();
     var msg = GK.$("#hm-msg");
     msg.textContent = text;
     msg.className = "gk-msg " + (won ? "ok" : "no");
@@ -96,7 +108,7 @@
   }
 
   function guess(L) {
-    if (over || GK.modalOpen) return;
+    if (over || GK.modalOpen || GK.timer.isPaused()) return;
     var btn = GK.$('#hm-keys button[data-l="' + L + '"]');
     if (!btn || btn.disabled) return;
     btn.disabled = true;
@@ -111,11 +123,15 @@
         return;
       }
       GK.$("#hm-msg").textContent = "";
+      turnStart();
     } else {
       btn.classList.add("miss");
+      GK.sfx("no");
       misses++;
       if (misses >= MAX_MISS) { finish(false, "Se acabaron los intentos. La palabra era: " + cur.w); return; }
+      GK.$("#hm-msg").textContent = "";
       GK.next();
+      turnStart();
     }
     paint();
   }
@@ -128,9 +144,12 @@
       if (/^[A-Z]$/.test(n)) letters[n] = true;
     });
     draw();
+    turnStart();
   }
 
   GK.init({
+    id: "ahorcado",
+    defaultTurn: 15,
     start: function () {
       queue = [];
       if (!GK.words().length) {

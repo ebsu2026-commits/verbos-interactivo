@@ -13,11 +13,13 @@
     { k: "bonus", label: "🎁 +2", c: "#f0a94a" },
   ];
   var STEP = 360 / SEGMENTS.length;
-  var angle = 0, spinning = false, disc = null, spinBtn = null;
+  var angle = 0, spinning = false, disc = null, spinBtn = null, nextQ = null, nextPrompt = null;
 
   function build() {
     var area = GK.$("#gk-area");
     area.innerHTML = "";
+    nextQ = GK.picker(GK.questions());
+    nextPrompt = GK.picker(GK.prompts());
     var wheel = GK.el("div", "wh");
     disc = GK.el("div", "wh-disc");
     var stops = SEGMENTS.map(function (s, i) { return s.c + " " + i * STEP + "deg " + (i + 1) * STEP + "deg"; });
@@ -42,7 +44,7 @@
   }
 
   function spin() {
-    if (spinning || GK.modalOpen) return;
+    if (spinning || GK.modalOpen || GK.timer.isPaused()) return;
     spinning = true;
     spinBtn.disabled = true;
     angle += 1440 + Math.floor(Math.random() * 360);
@@ -56,6 +58,7 @@
 
   function done(close) {
     close();
+    GK.timer.end();
     spinning = false;
     spinBtn.disabled = false;
     GK.next();
@@ -68,22 +71,25 @@
     box.appendChild(head);
     var cont = GK.el("button", "gk-btn", "Continuar →");
     var close;
+    var timer = null;
 
     if (seg.k === "q") {
-      var qs = GK.questions();
-      if (!qs.length) { box.appendChild(GK.el("p", "gk-big", "No hay preguntas para este contenido.")); }
+      var q = nextQ();
+      if (!q) { box.appendChild(GK.el("p", "gk-big", "No hay preguntas para este contenido.")); }
       else {
-        var q = qs[Math.floor(Math.random() * qs.length)];
-        box.appendChild(GK.ask(q, function (ok) { if (ok) GK.award(1); cont.hidden = false; }));
+        var card = GK.ask(q, function (ok) { if (ok) GK.award(1); cont.hidden = false; });
         cont.hidden = true;
+        box.appendChild(card);
+        timer = function () { card.timeout(); };
       }
       box.appendChild(cont);
     } else if (seg.k === "speak") {
-      var ps = GK.prompts();
-      var p = ps.length ? ps[Math.floor(Math.random() * ps.length)].p : "Di una oración libre con lo que aprendimos.";
+      var p = nextPrompt();
       var big = GK.el("p", "gk-big");
-      big.textContent = p;
+      big.textContent = p ? p.p : "Di una oración libre con lo que aprendimos.";
       box.appendChild(big);
+      var warn = GK.el("p", "gk-msg no");
+      box.appendChild(warn);
       var row = GK.el("div", "gk-row");
       var yes = GK.el("button", "gk-btn", "✓ Lo logró (+2)");
       var no = GK.el("button", "gk-btn alt", "✗ Todavía no (0)");
@@ -92,6 +98,7 @@
       row.appendChild(yes);
       row.appendChild(no);
       box.appendChild(row);
+      timer = function () { warn.textContent = "⏰ ¡Se acabó el tiempo! El docente decide."; };
     } else if (seg.k === "bonus") {
       var b = GK.el("p", "gk-big");
       b.textContent = "¡Punto extra! +2 para el equipo " + GK.team().name + ".";
@@ -106,8 +113,9 @@
       box.appendChild(cont);
     }
     close = GK.modal(box);
+    if (timer) GK.timer.begin(timer);
     cont.addEventListener("click", function () { done(close); });
   }
 
-  GK.init({ start: build });
+  GK.init({ id: "ruleta", defaultTurn: 30, start: build });
 })();
