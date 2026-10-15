@@ -12,7 +12,7 @@
 
   var GK = (window.GameKit = {
     teams: [], turn: 0, lang: "en", group: "all", nTeams: 2,
-    turnSeconds: 0, gameMinutes: 0, sel: {}, modalOpen: false,
+    turnSeconds: 0, gameMinutes: 0, sel: {}, modalOpen: false, active: false,
   });
 
   function $(sel, root) { return (root || document).querySelector(sel); }
@@ -111,7 +111,7 @@
     } catch (e) { /* sound is optional */ }
   }
   GK.sfx = function (kind) {
-    if (!cfg.sound) return;
+    if (!cfg.sound || !GK.active || document.hidden || T.paused) return;
     if (kind === "tick") tone(880, 0, 0.08, "square", 0.06);
     else if (kind === "ok") { tone(660, 0, 0.12, "sine", 0.15); tone(990, 0.12, 0.18, "sine", 0.15); }
     else if (kind === "no") { tone(220, 0, 0.25, "sawtooth", 0.1); }
@@ -152,7 +152,7 @@
   GK.team = function () { return GK.teams[GK.turn]; };
 
   // ------------------------------------------------------------------ timers
-  var T = { running: false, total: 0, left: 0, cb: null, paused: false, gLeft: 0, gActive: false, last: 0, iv: null, lastSec: -1 };
+  var T = { running: false, total: 0, left: 0, cb: null, paused: false, gLeft: 0, gActive: false, last: 0, iv: null, lastSec: -1, idle: 0 };
   function fmt(sec) {
     sec = Math.max(0, Math.ceil(sec));
     var m = Math.floor(sec / 60), s = sec % 60;
@@ -184,9 +184,11 @@
       if (T.left <= 0) {
         T.running = false; T.left = 0;
         var cb = T.cb; T.cb = null;
+        T.idle++;
         GK.sfx("end");
         paintClock();
         if (cb) cb();
+        if (T.idle >= 3 && GK.active) setPaused(true, "⏸ Pausa automática: nadie respondió en 3 turnos seguidos");
       }
     }
     if (T.gActive) {
@@ -205,7 +207,7 @@
   GK.timer = {
     // start the per-turn countdown; onExpire runs once if it reaches zero
     begin: function (onExpire, seconds) {
-      if (!GK.turnSeconds) { T.running = false; T.cb = null; paintClock(); return; }
+      if (!GK.active || !GK.turnSeconds) { T.running = false; T.cb = null; paintClock(); return; }
       T.total = T.left = seconds || GK.turnSeconds;
       T.cb = onExpire || null;
       T.running = true;
@@ -215,13 +217,13 @@
     end: function () { T.running = false; T.cb = null; paintClock(); },
     isPaused: function () { return T.paused; },
   };
-  function setPaused(p) {
+  function setPaused(p, why) {
     T.paused = p;
     var ov = $("#gk-pause-ov");
     if (p && !ov) {
       ov = el("div", "gk-pause-ov");
       ov.id = "gk-pause-ov";
-      ov.innerHTML = '<p class="gk-pause-title">⏸ En pausa</p>';
+      ov.innerHTML = '<p class="gk-pause-title">' + (why || "⏸ En pausa") + "</p>";
       var b = el("button", "gk-primary", "▶ Reanudar");
       b.addEventListener("click", function () { setPaused(false); });
       ov.appendChild(b);
@@ -229,9 +231,12 @@
     } else if (!p && ov) { ov.parentNode.removeChild(ov); }
     var pb = $("#gk-pause");
     if (pb) pb.textContent = p ? "▶ Reanudar" : "⏸ Pausa";
+    if (!p) T.idle = 0;
     T.last = performance.now();
   }
   function clockStart() {
+    GK.active = true;
+    T.idle = 0;
     T.running = false; T.cb = null;
     T.gLeft = GK.gameMinutes * 60;
     T.gActive = GK.gameMinutes > 0;
@@ -241,10 +246,24 @@
     paintClock();
   }
   function clockStop() {
+    GK.active = false;
     T.running = false; T.gActive = false; T.cb = null;
     setPaused(false);
     paintClock();
   }
+
+  function autoPause() {
+    if (GK.active && !T.paused && (T.running || T.gActive)) setPaused(true, "⏸ Pausa automática");
+  }
+  document.addEventListener("visibilitychange", function () { if (document.hidden) autoPause(); });
+  window.addEventListener("blur", autoPause);
+  ["pointerdown", "keydown"].forEach(function (ev) {
+    document.addEventListener(ev, function () { T.idle = 0; }, true);
+  });
+  window.addEventListener("pagehide", function () {
+    GK.active = false;
+    try { if (ac) ac.close(); } catch (e) { /* ignore */ }
+  });
 
   // ------------------------------------------------------------------ modals
   var openModals = [];
@@ -314,6 +333,7 @@
   };
 
   GK.endModal = function (onAgain, title) {
+    if (!GK.active) return;
     GK.timer.end();
     var max = Math.max.apply(null, GK.teams.map(function (t) { return t.score; }));
     var sorted = GK.teams.slice().sort(function (a, b) { return b.score - a.score; });

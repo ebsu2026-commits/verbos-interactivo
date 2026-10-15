@@ -71,7 +71,7 @@
     var a = flipped[0], b = flipped[1], thisRound = round;
     if (a.id === b.id) {
       setTimeout(function () {
-        if (thisRound !== round) return;
+        if (thisRound !== round || !GK.active) return;
         var color = GK.team().c;
         [a, b].forEach(function (c) {
           c.node.classList.remove("up");
@@ -87,7 +87,7 @@
     } else {
       GK.sfx("no");
       setTimeout(function () {
-        if (thisRound !== round) return;
+        if (thisRound !== round || !GK.active) return;
         a.node.classList.remove("up");
         b.node.classList.remove("up");
         flipped = []; lock = false;

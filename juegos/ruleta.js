@@ -52,6 +52,7 @@
     setTimeout(function () {
       var r = ((angle % 360) + 360) % 360;
       var idx = Math.floor(((360 - r) % 360) / STEP) % SEGMENTS.length;
+      if (!GK.active) return;
       result(SEGMENTS[idx]);
     }, 4400);
   }
