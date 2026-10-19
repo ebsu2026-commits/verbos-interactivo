@@ -827,6 +827,17 @@ const QUIZ_SCRIPT = `<script>
           var parts = scoreEl.textContent.split(' / ');
           scoreEl.textContent = (parseInt(parts[0], 10) + 1) + ' / ' + parts[1];
         }
+        var meta = window.PRACTICE_META;
+        if (meta && quiz && window.mieTrack) {
+          var section = quiz.dataset.quiz;
+          var items = quiz.querySelectorAll('[data-quiz-item]');
+          var number = Array.prototype.indexOf.call(items, item) + 1;
+          window.mieTrack('practice_answer', { topic: meta.topic, lang: meta.lang, section: section, question: number, correct: isCorrect ? 1 : 0 });
+          if (scoreEl && quiz.querySelectorAll('[data-answered]').length === items.length) {
+            var score = parseInt(scoreEl.textContent.split(' / ')[0], 10);
+            window.mieTrack('practice_complete', { topic: meta.topic, lang: meta.lang, section: section, score: score, total: items.length, percent: Math.round(score * 100 / items.length) });
+          }
+        }
       });
     });
   });
@@ -906,6 +917,7 @@ ${FOOT}`;
   </nav>
   ${COPYRIGHT}
 </div>
+<script>window.PRACTICE_META = ${JSON.stringify({ topic: t.title, lang: "en" })};</script>
 ${QUIZ_SCRIPT}
 </body>
 </html>

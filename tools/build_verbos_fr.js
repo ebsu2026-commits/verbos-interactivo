@@ -547,6 +547,7 @@ ${FOOT}`;
   </nav>
   ${COPYRIGHT}
 </div>
+<script>window.PRACTICE_META = ${JSON.stringify({ topic: t.title, lang: "fr" })};</script>
 ${QUIZ_SCRIPT}
 </body>
 </html>
