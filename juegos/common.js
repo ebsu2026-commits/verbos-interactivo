@@ -93,6 +93,7 @@
   GK.pairSets = function () { return GK.data().pairSets.filter(match); };
   GK.words = function () { return GK.data().words.filter(match); };
   GK.prompts = function () { return GK.data().prompts.filter(match); };
+  GK.scenes = function () { return GK.data().scenes.filter(match); };
 
   // ------------------------------------------------------------------ sounds
   var ac = null;

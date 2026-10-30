@@ -12,6 +12,7 @@ const dataEn = require("./juegos_data_en.js");
 const dataFr = require("./juegos_data_fr.js");
 const qEn = require("./juegos_q_en.js");
 const qFr = require("./juegos_q_fr.js");
+const escenas = require("./juegos_escenas.js");
 
 const readMap = (name) => {
   const p = path.join(__dirname, name);
@@ -87,7 +88,12 @@ function buildLang(lang, tenses, extra, qTable) {
   const groups = [...byGroup.values()];
 
   // vocabulary: level 1 = Spanish -> word, level 2 = word -> Spanish, level 3 = written in context
-  const vocabTopics = extra.vocab.map((v) => {
+  // the words of every scene of "Arma la escena" are vocabulary topics too (own groups, so they can be chosen in "Contenido")
+  const sceneGroups = escenas.groups[lang];
+  const sceneVocab = escenas.scenes.map((sc) => ({ title: sc.title[lang], group: sceneGroups[sc.group], items: sc.items.map((it) => [it[lang], it.es]) }));
+  const vocabAll = [...extra.vocab.map((v) => ({ ...v, group: v.group || extra.vocabGroup })), ...sceneVocab];
+  const vocabGroups = new Map();
+  vocabAll.forEach((v) => {
     const questions = [];
     v.items.forEach(([word, es], idx) => {
       const others = v.items.filter((_, i) => i !== idx);
@@ -96,9 +102,13 @@ function buildLang(lang, tenses, extra, qTable) {
       const wrongEs = sh(others.map((x) => x[1])).slice(0, 2);
       questions.push({ s: `¿Qué significa «${word}»?`, o: [es, ...wrongEs], a: 0, k: "vocab", d: 2 });
     });
-    return { title: v.title, questions: [...questions, ...extraQs(qTable, "vocab:" + v.title)] };
+    if (!vocabGroups.has(v.group)) {
+      const g = { name: v.group, topics: [] };
+      vocabGroups.set(v.group, g);
+      groups.push(g);
+    }
+    vocabGroups.get(v.group).topics.push({ title: v.title, questions: [...questions, ...extraQs(qTable, "vocab:" + v.title)] });
   });
-  groups.push({ name: extra.vocabGroup, topics: vocabTopics });
 
   const sentences = [];
   const extraSentenceTexts = [];
@@ -119,18 +129,25 @@ function buildLang(lang, tenses, extra, qTable) {
 
   const pairSets = [
     ...extra.pairSets.map((p) => ({ g: p.group, title: p.title, pairs: p.pairs })),
-    ...extra.vocab.map((v) => ({ g: extra.vocabGroup, tp: v.title, title: v.title, pairs: v.items.slice(0, 6) })),
+    ...vocabAll.map((v) => ({ g: v.group, tp: v.title, title: v.title, pairs: v.items.slice(0, 6) })),
   ];
 
   const words = [
     ...extra.words.map((w) => ({ g: w.group, w: w.w, c: w.c })),
-    ...extra.vocab.flatMap((v) =>
-      v.items.map(([word, es]) => ({ g: extra.vocabGroup, tp: v.title, w: word.toUpperCase(), c: `${es} · ${v.title}` }))
+    ...vocabAll.flatMap((v) =>
+      v.items.map(([word, es]) => ({ g: v.group, tp: v.title, w: word.toUpperCase(), c: `${es} · ${v.title}` }))
     ),
   ];
 
   const prompts = extra.prompts.map((p) => ({ g: p.group, p: p.p }));
-  return { groups, sentences, pairSets, words, prompts, _extraSentenceTexts: extraSentenceTexts };
+
+  // scenes for "Arma la escena"; each word gets pre-baked audio like the practice sentences
+  const scenes = escenas.scenes.map((sc) => ({
+    g: sceneGroups[sc.group], tp: sc.title[lang], title: sc.title[lang], bg: sc.bg,
+    items: sc.items.map((it) => ({ w: it[lang], es: it.es, e: it.e, x: it.x, y: it.y, s: it.s, l: it.l || "", a: AUDIO[lang][it[lang]] || null })),
+  }));
+  escenas.scenes.forEach((sc) => sc.items.forEach((it) => extraSentenceTexts.push(it[lang])));
+  return { groups, sentences, pairSets, words, prompts, scenes, _extraSentenceTexts: extraSentenceTexts };
 }
 
 const GAME_DATA = { en: buildLang("en", TENSES, dataEn, qEn), fr: buildLang("fr", TENSES_FR, dataFr, qFr) };
@@ -301,6 +318,42 @@ const GAMES_CSS = `
   .gk-end-list li{ display:flex; justify-content:space-between; gap:20px; background:var(--slate-1); border:2px solid var(--line-soft); border-radius:14px; padding:10px 18px; font-weight:700; font-size:1.2rem; }
   .gk-end-list li.win{ border-color:var(--yellow); }
 
+  /* scene builder */
+  .sc-title{ margin:0; color:var(--chalk-dim); font-size:.95rem; text-align:center; }
+  .sc-title strong{ color:var(--yellow); font-family:"Kalam",cursive; font-size:1.25rem; }
+  .sc-stage{ position:relative; width:100%; max-width:900px; aspect-ratio:16/9; border-radius:22px; overflow:hidden;
+    border:3px solid var(--line); container-type:inline-size; box-shadow:0 16px 36px -18px #000; }
+  .sc-room{ background:linear-gradient(#f1e3c4 0 62%, #8a5a36 62% 64%, #c99a68 64% 100%); }
+  .sc-city{ background:linear-gradient(#bfe6f7 0 46%, #9bd18b 46% 70%, #8b8f95 70% 100%); }
+  .sc-desk{ background:linear-gradient(#d8e6d0 0 20%, #7a5230 20% 22%, #c99a68 22% 100%); }
+  .sc-face{ background:#fbf3e3; }
+  .sc-faceshape{ position:absolute; left:50%; top:52%; height:88%; aspect-ratio:1; transform:translate(-50%,-50%);
+    border-radius:50%; background:#f6d2a8; border:4px solid #d9a877; }
+  .sc-slot{ position:absolute; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:2px;
+    background:none; border:3px solid transparent; border-radius:18px; padding:2px 6px; cursor:pointer; font:inherit; color:#2b2b2b; }
+  .sc-ico{ display:block; line-height:1; font-size:calc(var(--s,1) * 5.6vw); font-size:calc(var(--s,1) * 7cqw); transition:filter .2s; }
+  .sc-slot.hid .sc-ico{ filter:brightness(0) opacity(.42); }
+  .sc-slot.hid.nohint .sc-ico{ filter:none; opacity:0; }
+  .sc-slot.hid.nohint::before{ content:"?"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-family:"Kalam",cursive; font-weight:700; font-size:calc(var(--s,1) * 5cqw); color:#00000066; }
+  .sc-slot.hid:hover{ background:#ffffff55; }
+  .sc-slot.sel{ border-color:var(--yellow); background:#ffffff88; box-shadow:0 0 0 4px #f0c94a66; }
+  .sc-num{ position:absolute; left:-6px; top:-6px; min-width:1.5em; height:1.5em; padding:0 3px; border-radius:999px; background:var(--slate-1); color:var(--chalk);
+    font-weight:700; font-size:clamp(.7rem,2cqw,1.1rem); display:flex; align-items:center; justify-content:center; border:2px solid var(--chalk); }
+  .sc-slot.rev .sc-num{ display:none; }
+  .sc-label{ display:none; flex-direction:column; align-items:center; background:var(--chalk); color:var(--slate-1); border-radius:10px; padding:1px 10px 3px;
+    font-family:"Kalam",cursive; font-weight:700; font-size:clamp(.85rem,2.8cqw,1.5rem); line-height:1.15; white-space:nowrap; box-shadow:0 3px 8px -3px #0008; }
+  .sc-label small{ font-family:inherit; font-weight:600; font-size:.62em; color:#555; }
+  .sc-slot.side-r .sc-label{ position:absolute; left:100%; top:50%; transform:translateY(-50%); margin-left:6px; z-index:2; }
+  .sc-slot.rev{ cursor:default; }
+  .sc-slot.rev .sc-label{ display:flex; }
+  .sc-slot.rev .sc-ico{ animation:scpop .45s; }
+  .sc-slot.rev.miss .sc-label{ background:#ffd9d2; }
+  .sc-slot.rev.hit .sc-label{ background:#cdeed7; }
+  @keyframes scpop{ 0%{ transform:scale(.3); } 70%{ transform:scale(1.2); } 100%{ transform:scale(1); } }
+  .sc-bar{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; align-items:center; }
+  .gk-btn.ok{ background:var(--mint); } .gk-btn.bad{ background:var(--coral); }
+
   /* games hub */
   .gm-card{ display:flex; flex-direction:column; gap:8px; text-decoration:none; background:var(--slate-2); border:1.5px solid var(--line-soft);
     border-radius:20px; padding:18px 20px; transition:transform .15s,border-color .15s; position:relative; overflow:hidden; }
@@ -372,6 +425,18 @@ const GAMES = [
       "Si el equipo en turno acierta: +2 puntos y se escucha la oración. Si falla, le toca al siguiente equipo con la misma oración.",
       "Si todos los equipos fallan, se muestra la respuesta.",
       "⏱ Cada intento tiene su reloj: si se acaba, cuenta como un intento fallido y pasa al siguiente equipo.",
+    ],
+  },
+  {
+    slug: "escena", title: "Arma la escena", icon: "🏠", color: "amber", js: "escena.js", tag: "Equipos · vocabulario",
+    desc: "Una sala, un dormitorio, la ciudad… con piezas escondidas. Digan qué objeto va en cada lugar y comprueben si acertaron.",
+    short: "Completen la escena: digan el objeto que falta y el docente lo muestra.",
+    rules: [
+      "Aparece una escena (la sala, el dormitorio, la ciudad, la familia, la cara…) con piezas en silueta y numeradas.",
+      "El equipo en turno elige un número, dice en voz alta la palabra del objeto en inglés o francés y el docente toca «Mostrar».",
+      "Si coincide con el objeto que aparece, el docente toca ✓ (+2 puntos y el equipo sigue). Si no, toca ✗ y pasa el turno. Al mostrarse, se escucha la palabra.",
+      "«Siluetas: no» esconde la forma del objeto y deja solo un «?» (más difícil).",
+      "⏱ Si se acaba el tiempo del turno, se muestra la pieza elegida y pasa al siguiente equipo. Al descubrir todo, pasen a otra escena o terminen.",
     ],
   },
 ];
@@ -502,7 +567,7 @@ const hubHtml = `${HEAD("Aprender jugando — Verbos y Gramática")}
     <p class="eyebrow">Estrategia de enseñanza · Dinámicas de aula</p>
     <h1>🎲 Aprender jugando</h1>
     ${SQUIGGLE}
-    <p class="hub-intro">Juegos para proyectar en el aula y jugar por equipos, con el mismo contenido que ya practicamos: verbos, modales, posesivos, pronombres y vocabulario. Funcionan en inglés y en francés.</p>
+    <p class="hub-intro">Juegos para proyectar en el aula y jugar por equipos, con el mismo contenido que ya practicamos: verbos, modales, posesivos, pronombres y vocabulario (incluidas escenas para armar: la sala, el dormitorio, la ciudad, la familia). Funcionan en inglés y en francés.</p>
   </header>
 
   <div class="card-grid">
